@@ -1,0 +1,121 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { InventoryItem, ExchangeRecord } from "./types/index";
+import WalletCard from "../components/WalletCard";
+import ExchangeForm from "../components/ExchangeForm";
+import ProductForm from "../components/ProductForm";
+import InventoryTable from "../components/InventoryTable";
+import Link from "next/link";
+
+export default function SYCHE_ERP() {
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
+
+  // 計算資金池現況
+  const walletStats = useMemo(() => {
+    const totalThbIn = exchangeRecords.reduce(
+      (sum, record) => sum + record.thbReceived,
+      0,
+    );
+    const totalTwdSpent = exchangeRecords.reduce(
+      (sum, record) => sum + record.twdSpent,
+      0,
+    );
+    const totalThbOut = inventory.reduce(
+      (sum, item) => sum + item.foreignCost * item.quantity,
+      0,
+    );
+    const totalTwdOut = inventory.reduce(
+      (sum, item) => sum + item.twdCost * item.quantity,
+      0,
+    );
+
+    const currentThbBalance = totalThbIn - totalThbOut;
+    const currentTwdCostPool = totalTwdSpent - totalTwdOut;
+    const averageRate =
+      currentThbBalance > 0 ? currentTwdCostPool / currentThbBalance : 0;
+
+    return { balance: currentThbBalance, avgRate: averageRate };
+  }, [exchangeRecords, inventory]);
+
+  // 處理新增換匯
+  const handleAddExchange = (twd: number, thb: number) => {
+    setExchangeRecords([
+      ...exchangeRecords,
+      {
+        id: Date.now(),
+        twdSpent: twd,
+        thbReceived: thb,
+        date: new Date().toLocaleString(),
+      },
+    ]);
+  };
+
+  // 處理新增商品
+  const handleAddProduct = async (
+    name: string,
+    foreignCost: number,
+    quantity: number,
+  ) => {
+    const appliedRate = walletStats.avgRate;
+    const twdCost = Math.round(foreignCost * appliedRate);
+    setInventory([
+      {
+        id: Date.now(),
+        name,
+        foreignCost,
+        appliedRate,
+        twdCost,
+        quantity,
+      },
+      ...inventory,
+    ]);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              <span className="text-2xl">🇹🇭</span> SYCHE{" "}
+              <span className="text-slate-400 font-normal text-lg ml-2">
+                進銷存管理
+              </span>
+            </h1>
+            <nav className="hidden md:flex gap-4 ml-4">
+              <Link
+                href="/"
+                className="text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+              >
+                庫存管理
+              </Link>
+              <Link
+                href="/orders"
+                className="text-slate-500 hover:text-blue-600 font-medium transition-colors"
+              >
+                訂單管理
+              </Link>
+            </nav>
+          </div>
+          <div className="text-sm text-slate-500 hidden sm:block">v1.2.0</div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-6 mt-8 space-y-8">
+        <WalletCard stats={walletStats} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <ExchangeForm onAddRecord={handleAddExchange} />
+          <ProductForm
+            walletStats={walletStats}
+            onAddProduct={handleAddProduct}
+          />
+        </div>
+
+        <InventoryTable inventory={inventory} />
+      </main>
+    </div>
+  );
+}

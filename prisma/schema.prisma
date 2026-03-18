@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 換匯紀錄表
+model ExchangeRecord {
+  id          Int      @id @default(autoincrement())
+  twdSpent    Float
+  thbReceived Float
+  createdAt   DateTime @default(now())
+}
+
+// 庫存商品表
+model InventoryItem {
+  id          Int      @id @default(autoincrement())
+  name        String
+  foreignCost Float
+  appliedRate Float
+  twdCost     Int
+  quantity    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 訂單表
+model Order {
+  id           String      @id
+  customerName String
+  totalAmount  Int
+  status       String      @default("placed")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        OrderItem[]
+}
+
+// 訂單明細表
+model OrderItem {
+  id           Int    @id @default(autoincrement())
+  orderId      String
+  productName  String
+  quantity     Int
+  sellPriceTwd Int
+  order        Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
