@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { InventoryItem, ExchangeRecord } from "./types/index";
 import WalletCard from "../components/WalletCard";
 import ExchangeForm from "../components/ExchangeForm";
@@ -12,6 +12,35 @@ export default function SYCHE_ERP() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchInitialData = async () => {
+      try {
+        const [invRes, excRes] = await Promise.all([
+          fetch("/api/inventory"),
+          fetch("/api/exchanges"),
+        ]);
+
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          if (!ignore) setInventory(invData);
+        }
+        if (excRes.ok) {
+          const excData = await excRes.json();
+          if (!ignore) setExchangeRecords(excData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      }
+    };
+
+    fetchInitialData();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
   // 計算資金池現況
   const walletStats = useMemo(() => {
     const totalThbIn = exchangeRecords.reduce(
@@ -40,16 +69,20 @@ export default function SYCHE_ERP() {
   }, [exchangeRecords, inventory]);
 
   // 處理新增換匯
-  const handleAddExchange = (twd: number, thb: number) => {
-    setExchangeRecords([
-      ...exchangeRecords,
-      {
-        id: Date.now(),
-        twdSpent: twd,
-        thbReceived: thb,
-        date: new Date().toLocaleString(),
-      },
-    ]);
+  const handleAddExchange = async (twd: number, thb: number) => {
+    try {
+      const res = await fetch("/api/exchanges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ twdSpent: twd, thbReceived: thb }),
+      });
+      if (res.ok) {
+        const { item } = await res.json();
+        setExchangeRecords([item, ...exchangeRecords]);
+      }
+    } catch (error) {
+      console.error("Failed to add exchange:", error);
+    }
   };
 
   // 處理新增商品
@@ -60,17 +93,26 @@ export default function SYCHE_ERP() {
   ) => {
     const appliedRate = walletStats.avgRate;
     const twdCost = Math.round(foreignCost * appliedRate);
-    setInventory([
-      {
-        id: Date.now(),
-        name,
-        foreignCost,
-        appliedRate,
-        twdCost,
-        quantity,
-      },
-      ...inventory,
-    ]);
+
+    try {
+      const res = await fetch("/api/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          foreignCost,
+          appliedRate,
+          twdCost,
+          quantity,
+        }),
+      });
+      if (res.ok) {
+        const { item } = await res.json();
+        setInventory([item, ...inventory]);
+      }
+    } catch (error) {
+      console.error("Failed to add inventory:", error);
+    }
   };
 
   return (
