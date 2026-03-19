@@ -65,7 +65,11 @@ export default function SYCHE_ERP() {
     const averageRate =
       currentThbBalance > 0 ? currentTwdCostPool / currentThbBalance : 0;
 
-    return { balance: currentThbBalance, avgRate: averageRate };
+    return {
+      balance: currentThbBalance,
+      avgRate: averageRate,
+      exchangeRecords,
+    };
   }, [exchangeRecords, inventory]);
 
   // 處理新增換匯
@@ -91,9 +95,6 @@ export default function SYCHE_ERP() {
     foreignCost: number,
     quantity: number,
   ) => {
-    const appliedRate = walletStats.avgRate;
-    const twdCost = Math.round(foreignCost * appliedRate);
-
     try {
       const res = await fetch("/api/inventory", {
         method: "POST",
@@ -101,14 +102,15 @@ export default function SYCHE_ERP() {
         body: JSON.stringify({
           name,
           foreignCost,
-          appliedRate,
-          twdCost,
           quantity,
         }),
       });
       if (res.ok) {
         const { item } = await res.json();
         setInventory([item, ...inventory]);
+      } else {
+        const err = await res.json();
+        alert(err.error || "新增庫存失敗");
       }
     } catch (error) {
       console.error("Failed to add inventory:", error);
