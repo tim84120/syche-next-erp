@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 
 // --- 型別定義 (確保這些都有保留) ---
 export type OrderStatus =
@@ -60,7 +59,7 @@ const statusConfig: Record<OrderStatus, { label: string; colorClass: string }> =
 export default function OrdersPage() {
   // 1. 初始化變成空陣列，等待從 API 抓資料
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   const [form, setForm] = useState({
     customerName: "",
@@ -203,35 +202,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
-      {/* 導覽列 */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-              <span className="text-2xl">🇹🇭</span> THAITAI{" "}
-              <span className="text-slate-400 font-normal text-lg ml-2">
-                進銷存管理
-              </span>
-            </h1>
-            <nav className="hidden md:flex gap-4 ml-4">
-              <Link
-                href="/"
-                className="text-slate-500 hover:text-blue-600 font-medium transition-colors"
-              >
-                庫存管理
-              </Link>
-              <Link
-                href="/orders"
-                className="text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
-              >
-                訂單管理
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
+    <>
       <main className="max-w-6xl mx-auto px-6 mt-8 space-y-8">
         {/* 新增訂單區塊 (與之前相同) */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
@@ -483,6 +454,6 @@ export default function OrdersPage() {
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
