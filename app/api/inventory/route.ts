@@ -22,13 +22,23 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // 簡單的資料驗證
-    if (!body.name || body.foreignCost == null || body.quantity == null) {
+    if (
+      !body.name ||
+      !body.brand ||
+      !body.style ||
+      !body.size ||
+      body.foreignCost == null ||
+      body.quantity == null
+    ) {
       return NextResponse.json({ error: "請填寫完整資訊" }, { status: 400 });
     }
 
     try {
       const newItem = await addInventoryItem(
         body.name,
+        body.brand,
+        body.style,
+        body.size,
         Number(body.foreignCost),
         Number(body.quantity),
       );

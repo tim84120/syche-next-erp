@@ -8,6 +8,9 @@ export async function getInventoryItems() {
 
 export async function addInventoryItem(
   name: string,
+  brand: string,
+  style: string,
+  size: string,
   foreignCost: number,
   quantity: number,
 ) {
@@ -74,7 +77,10 @@ export async function addInventoryItem(
 
   const newItem = await prisma.inventoryItem.create({
     data: {
+      brand,
       name,
+      style,
+      size,
       foreignCost,
       appliedRate: singleAppliedRate,
       twdCost: singleTwdCost,

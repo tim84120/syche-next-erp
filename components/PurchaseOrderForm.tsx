@@ -10,7 +10,7 @@ export default function PurchaseOrderForm({
     name: "",
     style: "",
     size: "",
-    quantity: 0,
+    quantity: 1,
     link: "",
     note: "",
   });
@@ -33,7 +33,7 @@ export default function PurchaseOrderForm({
           name: "",
           style: "",
           size: "",
-          quantity: 0,
+          quantity: 1,
           link: "",
           note: "",
         });

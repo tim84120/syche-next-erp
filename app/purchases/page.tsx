@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import ProductForm from "../../components/ProductForm";
+import ProductForm, { ProductFormRef } from "../../components/ProductForm";
 import PurchaseOrderForm from "../../components/PurchaseOrderForm";
 import PurchaseOrderTable from "../../components/PurchaseOrderTable";
 import { InventoryItem, ExchangeRecord } from "../types/index";
@@ -13,6 +13,8 @@ export default function PurchasesPage() {
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
   const [, setIsLoading] = useState(true);
+
+  const productFormRef = useRef<ProductFormRef>(null);
 
   const fetchInitialData = async () => {
     setIsLoading(true);
@@ -130,11 +132,19 @@ export default function PurchasesPage() {
         <PurchaseOrderForm onOrderAdded={fetchInitialData} />
 
         <ProductForm
+          ref={productFormRef}
           walletStats={walletStats}
           onAddProducts={handleAddProducts}
         />
 
-        <PurchaseOrderTable purchaseOrders={purchaseOrders} />
+        <PurchaseOrderTable
+          purchaseOrders={purchaseOrders}
+          onImportSelected={(selectedOrders) => {
+            if (productFormRef.current) {
+              productFormRef.current.importProducts(selectedOrders);
+            }
+          }}
+        />
       </div>
     </div>
   );

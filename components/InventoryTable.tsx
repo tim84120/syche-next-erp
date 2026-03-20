@@ -1,9 +1,9 @@
-import { InventoryItem } from "../app/types";
+import type { InventoryItemMaxAggregateOutputType } from "@/generated/prisma/models/InventoryItem";
 
 export default function InventoryTable({
   inventory,
 }: {
-  inventory: InventoryItem[];
+  inventory: InventoryItemMaxAggregateOutputType[];
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -22,7 +22,7 @@ export default function InventoryTable({
                 scope="col"
                 className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                商品名稱
+                品牌 / 品名
               </th>
               <th
                 scope="col"
@@ -67,7 +67,10 @@ export default function InventoryTable({
                   className="hover:bg-slate-50/80 transition-colors"
                 >
                   <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
-                    {item.name}
+                    <div className="font-medium text-slate-900">
+                      {item.brand}
+                    </div>
+                    <div className="text-sm text-slate-500">{item.name}</div>
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-600">
                     <span className="bg-slate-100 px-2.5 py-1 rounded-md font-semibold">
