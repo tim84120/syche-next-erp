@@ -1,9 +1,9 @@
-import type { InventoryItemMaxAggregateOutputType } from "@/generated/prisma/models/InventoryItem";
+import type { InventoryItem } from "@/app/types/index";
 
 export default function InventoryTable({
   inventory,
 }: {
-  inventory: InventoryItemMaxAggregateOutputType[];
+  inventory: InventoryItem[];
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

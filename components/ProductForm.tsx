@@ -9,18 +9,28 @@ export interface ProductItem {
   size: string;
   foreignCost: string;
   quantity: string;
+  purchaseOrderId?: number;
 }
 
 interface Props {
   walletStats: WalletStats;
   onAddProducts: (
-    products: { name: string; foreignCost: number; quantity: number }[],
+    products: {
+      brand: string;
+      name: string;
+      style: string;
+      size: string;
+      foreignCost: number;
+      quantity: number;
+      purchaseOrderId?: number;
+    }[],
   ) => Promise<boolean>;
 }
 
 export interface ProductFormRef {
   importProducts: (
     products: {
+      id?: number;
       brand: string;
       name: string;
       style: string;
@@ -58,6 +68,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           name: p.name,
           foreignCost: "", // Leave blank for the user to fill
           quantity: p.quantity.toString(),
+          purchaseOrderId: p.id,
         }));
         setItems([...currentItems, ...newItems]);
         // Also scroll slightly to this form
@@ -124,6 +135,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           (Number(item.foreignCost) * discountRatio).toFixed(2),
         ),
         quantity: Number(item.quantity),
+        purchaseOrderId: item.purchaseOrderId,
       }));
 
       setIsSubmitting(true);

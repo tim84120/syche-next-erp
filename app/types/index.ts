@@ -1,11 +1,17 @@
 // types.ts
 export interface InventoryItem {
   id: number;
+  brand: string;
   name: string;
+  style: string;
+  size: string;
   foreignCost: number;
   appliedRate: number;
   twdCost: number;
   quantity: number;
+  purchaseOrderId?: number | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface ExchangeRecord {

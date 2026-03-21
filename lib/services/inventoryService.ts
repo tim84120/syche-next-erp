@@ -13,6 +13,7 @@ export async function addInventoryItem(
   size: string,
   foreignCost: number,
   quantity: number,
+  purchaseOrderId?: number,
 ) {
   const totalThbNeeded = foreignCost * quantity;
 
@@ -85,8 +86,27 @@ export async function addInventoryItem(
       appliedRate: singleAppliedRate,
       twdCost: singleTwdCost,
       quantity,
+      purchaseOrderId,
     },
   });
+  if (purchaseOrderId) {
+    const po = await prisma.purchaseOrder.findUnique({
+      where: { id: purchaseOrderId },
+      include: {
+        inventoryItems: true,
+      },
+    });
+    const inventoryCountForPO = po?.inventoryItems.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    if (po && (inventoryCountForPO ?? 0) >= po.quantity) {
+      await prisma.purchaseOrder.update({
+        where: { id: purchaseOrderId },
+        data: { status: "completed" },
+      });
+    }
+  }
 
   return newItem;
 }

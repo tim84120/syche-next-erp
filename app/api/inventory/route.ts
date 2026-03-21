@@ -41,6 +41,7 @@ export async function POST(request: Request) {
         body.size,
         Number(body.foreignCost),
         Number(body.quantity),
+        body.purchaseOrderId ? Number(body.purchaseOrderId) : undefined,
       );
 
       return NextResponse.json(

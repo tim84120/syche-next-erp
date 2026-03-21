@@ -89,7 +89,7 @@ model ExchangeRecord {
 
 // 庫存商品表
 model InventoryItem {
-  id          Int      @id @default(autoincrement())
+  id          Int    @id @default(autoincrement())
   brand       String // 品牌
   name        String // 品名
   style       String // 款式
@@ -98,8 +98,12 @@ model InventoryItem {
   appliedRate Float
   twdCost     Int
   quantity    Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  purchaseOrderId Int?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // 訂單表
@@ -127,16 +131,19 @@ model OrderItem {
 
 // 採購單表
 model PurchaseOrder {
-  id          Int      @id @default(autoincrement())
-  orderNumber String?  @unique @default(uuid()) // 單號
+  id          Int     @id @default(autoincrement())
+  orderNumber String? @unique @default(uuid()) // 單號
   brand       String // 品牌
   name        String // 品名
   style       String // 款式
   size        String // 尺寸
-  quantity    Int      @default(1) // 數量
+  quantity    Int     @default(1) // 數量
   link        String // 連結
   note        String? // 備註 (選填)
-  status      String   @default("pending") // 狀態
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String  @default("pending") // 狀態
+
+  inventoryItems InventoryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -79,7 +79,15 @@ export default function PurchasesPage() {
   }, [exchangeRecords, inventory]);
 
   const handleAddProducts = async (
-    products: { name: string; foreignCost: number; quantity: number }[],
+    products: {
+      brand: string;
+      name: string;
+      style: string;
+      size: string;
+      foreignCost: number;
+      quantity: number;
+      purchaseOrderId?: number;
+    }[],
   ) => {
     let hasError = false;
     const addedItems: InventoryItem[] = [];
@@ -108,7 +116,7 @@ export default function PurchasesPage() {
     }
 
     if (addedItems.length > 0) {
-      setInventory((prev) => [...addedItems.reverse(), ...prev]);
+      await fetchInitialData();
     }
     return !hasError;
   };
