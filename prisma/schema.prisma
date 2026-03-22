@@ -111,8 +111,15 @@ model InventoryItem {
 // 訂單表
 model Order {
   id           String      @id
-  customerName String
-  totalAmount  Int
+  customerName String // 姓名
+  storeNumber  String? // 店號
+  storeName    String? // 店名
+  transferCode String? // 匯款後五碼
+  totalAmount  Int // 金額
+  note         String? // 備註
+  detail       String? // 訂單明細
+  lineName     String? // Line名字
+  email        String? // Email
   status       String      @default("placed")
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt

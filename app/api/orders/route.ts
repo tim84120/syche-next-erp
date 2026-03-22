@@ -32,17 +32,17 @@ export async function POST(request: Request) {
       data: {
         id: orderId,
         customerName: body.customerName,
+        storeNumber: body.storeNumber || null,
+        storeName: body.storeName || null,
+        transferCode: body.transferCode || null,
         totalAmount: body.totalAmount,
+        note: body.note || null,
+        detail: body.detail || null,
+        lineName: body.lineName || null,
+        email: body.email || null,
         status: "placed",
-        items: {
-          create: body.items.map((item: any) => ({
-            productName: item.productName,
-            quantity: Number(item.quantity),
-            sellPriceTwd: Number(item.sellPriceTwd),
-          })),
-        },
       },
-      include: { items: true }, // 寫入完成後，連同明細一起回傳給前端
+      include: { items: true },
     });
 
     return NextResponse.json(newOrder, { status: 201 });

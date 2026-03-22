@@ -12,7 +12,7 @@ export default function Header() {
   if (pathname === "/api/auth/signin") return null;
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-100">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">

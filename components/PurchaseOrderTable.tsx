@@ -116,6 +116,9 @@ export default function PurchaseOrderTable({
                 />
               </th>
               <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+                狀態
+              </th>
+              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
                 單號 / 日期
               </th>
               <th className="px-6 py-4 text-sm font-semibold text-slate-600">
@@ -132,9 +135,6 @@ export default function PurchaseOrderTable({
               </th>
               <th className="px-6 py-4 text-sm font-semibold text-slate-600">
                 備註
-              </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
-                狀態
               </th>
             </tr>
           </thead>
@@ -160,6 +160,14 @@ export default function PurchaseOrderTable({
                       }
                       disabled={order.status !== 0}
                     />
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((s) => s.value === order.status)?.color || ""}`}
+                    >
+                      {statusMap.find((s) => s.value === order.status)?.label ||
+                        "-"}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-mono text-xs text-slate-600 font-bold mb-1">
@@ -201,14 +209,6 @@ export default function PurchaseOrderTable({
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
                     {order.note || "-"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((s) => s.value === order.status)?.color || ""}`}
-                    >
-                      {statusMap.find((s) => s.value === order.status)?.label ||
-                        "-"}
-                    </span>
                   </td>
                 </tr>
                 {expandedId === order.id &&
