@@ -23,6 +23,7 @@ interface Props {
       foreignCost: number;
       quantity: number;
       purchaseOrderId?: number;
+      paymentMethod: string;
     }[],
   ) => Promise<boolean>;
 }
@@ -54,6 +55,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
       },
     ]);
     const [discount, setDiscount] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState<"cash" | "card">("cash");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useImperativeHandle(ref, () => ({
@@ -117,7 +119,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
       const discountThb = Number(discount) || 0;
       const totalFinalThb = totalOriginalThb - discountThb;
 
-      if (walletStats.balance < totalFinalThb) {
+      if (walletStats.balance < totalFinalThb && paymentMethod === "cash") {
         return alert("餘額不足，請先新增換匯紀錄！");
       }
 
@@ -136,6 +138,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
         ),
         quantity: Number(item.quantity),
         purchaseOrderId: item.purchaseOrderId,
+        paymentMethod,
       }));
 
       setIsSubmitting(true);
@@ -155,6 +158,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           },
         ]);
         setDiscount("");
+        setPaymentMethod("cash");
       }
     };
 
@@ -305,6 +309,36 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
                 onChange={(e) => setDiscount(e.target.value)}
                 placeholder="輸入折抵金額"
               />
+            </div>
+
+            <div className="w-full md:w-1/2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                扣款方式
+              </label>
+              <div className="flex rounded-lg overflow-hidden border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cash")}
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                    paymentMethod === "cash"
+                      ? "bg-amber-500 text-white"
+                      : "bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  💵 現金
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("card")}
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors border-l border-slate-200 ${
+                    paymentMethod === "card"
+                      ? "bg-amber-500 text-white"
+                      : "bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  💳 刷卡
+                </button>
+              </div>
             </div>
 
             <div className="bg-amber-50/50 rounded-lg p-4 w-full md:w-1/2 flex justify-between items-center border border-amber-100">

@@ -49,6 +49,9 @@ export default function PurchasesPage() {
   }, []);
 
   const walletStats = useMemo(() => {
+    const cashInventory = inventory.filter(
+      (record) => record.paymentMethod === "cash",
+    );
     const totalThbIn = exchangeRecords.reduce(
       (sum, record) => sum + record.thbReceived,
       0,
@@ -57,11 +60,11 @@ export default function PurchasesPage() {
       (sum, record) => sum + record.twdSpent,
       0,
     );
-    const totalThbOut = inventory.reduce(
+    const totalThbOut = cashInventory.reduce(
       (sum, item) => sum + item.foreignCost * item.quantity,
       0,
     );
-    const totalTwdOut = inventory.reduce(
+    const totalTwdOut = cashInventory.reduce(
       (sum, item) => sum + item.twdCost * item.quantity,
       0,
     );
@@ -87,6 +90,7 @@ export default function PurchasesPage() {
       foreignCost: number;
       quantity: number;
       purchaseOrderId?: number;
+      paymentMethod: string;
     }[],
   ) => {
     let hasError = false;

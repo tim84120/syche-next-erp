@@ -41,6 +41,9 @@ export async function POST(request: Request) {
         body.size,
         Number(body.foreignCost),
         Number(body.quantity),
+        typeof body.paymentMethod === "string" && body.paymentMethod === "card"
+          ? "card"
+          : "cash",
         body.purchaseOrderId ? Number(body.purchaseOrderId) : undefined,
       );
 

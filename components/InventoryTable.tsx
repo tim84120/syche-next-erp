@@ -1,4 +1,5 @@
 import type { InventoryItem } from "@/app/types/index";
+import { statusMap } from "@/constants";
 
 export default function InventoryTable({
   inventory,
@@ -91,13 +92,10 @@ export default function InventoryTable({
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-500">
                     <span
-                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                        item.status === "已到貨(TW)"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((status) => status.value === item.status)?.color}`}
                     >
-                      {item.status || "已下單"}
+                      {statusMap.find((status) => status.value === item.status)
+                        ?.label || "已下單"}
                     </span>
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
