@@ -46,6 +46,12 @@ export default function InventoryTable({
                 scope="col"
                 className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
+                狀態
+              </th>
+              <th
+                scope="col"
+                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+              >
                 台幣單件成本
               </th>
             </tr>
@@ -82,6 +88,17 @@ export default function InventoryTable({
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
                     {item.appliedRate?.toFixed(4)}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-500">
+                    <span
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        item.status === "已到貨(TW)"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {item.status || "已下單"}
+                    </span>
                   </td>
                   <td className="px-8 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
                     NT$ {item.twdCost?.toLocaleString()}

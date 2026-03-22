@@ -9,6 +9,7 @@ export interface InventoryItem {
   appliedRate: number;
   twdCost: number;
   quantity: number;
+  status?: string;
   purchaseOrderId?: number | null;
   createdAt?: string | Date;
   updatedAt?: string | Date;

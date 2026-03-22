@@ -1,13 +1,10 @@
-// app/api/orders/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // 1. 取得所有訂單 (GET)
 export async function GET() {
-  console.log("正在取得訂單...");
   try {
     // 透過 Prisma 抓取所有訂單，並透過 include 順便把關聯的「商品明細 (items)」一起抓出來
-    console.log("正在取得訂單...", prisma);
     const orders = await prisma.order.findMany({});
     return NextResponse.json(orders);
   } catch (error) {
@@ -18,7 +15,6 @@ export async function GET() {
 
 // 2. 新增訂單 (POST)
 export async function POST(request: Request) {
-  console.log("收到新增訂單請求...");
   try {
     const body = await request.json();
 

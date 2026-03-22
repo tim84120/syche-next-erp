@@ -121,6 +121,24 @@ export default function PurchasesPage() {
     return !hasError;
   };
 
+  const handleItemStatusChange = async (itemId: number, newStatus: number) => {
+    try {
+      const res = await fetch(`/api/inventory/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        await fetchInitialData();
+      } else {
+        alert("更新狀態失敗");
+      }
+    } catch (error) {
+      console.error("更新狀態失敗:", error);
+      alert("更新狀態失敗");
+    }
+  };
+
   if (!session?.user) {
     return (
       <div className="p-8 text-center text-gray-500">請先登入以檢視此頁面</div>
@@ -144,7 +162,6 @@ export default function PurchasesPage() {
           walletStats={walletStats}
           onAddProducts={handleAddProducts}
         />
-
         <PurchaseOrderTable
           purchaseOrders={purchaseOrders}
           onImportSelected={(selectedOrders) => {
@@ -152,6 +169,7 @@ export default function PurchasesPage() {
               productFormRef.current.importProducts(selectedOrders);
             }
           }}
+          onItemStatusChange={handleItemStatusChange}
         />
       </div>
     </div>

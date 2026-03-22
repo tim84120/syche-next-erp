@@ -103,10 +103,41 @@ export async function addInventoryItem(
     if (po && (inventoryCountForPO ?? 0) >= po.quantity) {
       await prisma.purchaseOrder.update({
         where: { id: purchaseOrderId },
-        data: { status: "completed" },
+        data: { status: 1 },
       });
     }
   }
 
   return newItem;
+}
+
+export async function updateInventoryItemStatus(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const resolvedParams = await params;
+  const id = parseInt(resolvedParams.id, 10);
+  const body = await request.json();
+  const { status } = body;
+
+  const updatedItem = await prisma.inventoryItem.update({
+    where: { id: id },
+    data: { status: Number(status) as 1 | 2 | 3 | 4 }, // 確保寫入數字
+  });
+  if (updatedItem.purchaseOrderId) {
+    // 找出該採購單底下所有的進貨商品
+    const allItems = await prisma.inventoryItem.findMany({
+      where: { purchaseOrderId: updatedItem.purchaseOrderId },
+    });
+
+    // 直接用 Math.min 找出所有商品中「進度最慢的」那一個狀態數字
+    const minStatus = Math.min(...allItems.map((item) => item.status));
+
+    // 將最小狀態同步回採購單
+    await prisma.purchaseOrder.update({
+      where: { id: updatedItem.purchaseOrderId },
+      data: { status: minStatus as 0 | 1 | 2 | 3 | 4 },
+    });
+  }
+  return updatedItem;
 }

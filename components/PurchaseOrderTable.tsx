@@ -10,7 +10,7 @@ export interface PurchaseOrder {
   quantity: number;
   link: string;
   note: string | null;
-  status: string;
+  status: 0 | 1 | 2 | 3 | 4; // 0 = pending, 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
   createdAt: string;
   inventoryItems?: {
     id: number;
@@ -18,15 +18,18 @@ export interface PurchaseOrder {
     appliedRate: number;
     twdCost: number;
     quantity: number;
+    status: 1 | 2 | 3 | 4; // 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
   }[];
 }
 
 export default function PurchaseOrderTable({
   purchaseOrders,
   onImportSelected,
+  onItemStatusChange,
 }: {
   purchaseOrders: PurchaseOrder[];
   onImportSelected: (orders: PurchaseOrder[]) => void;
+  onItemStatusChange?: (itemId: number, newStatus: 1 | 2 | 3 | 4) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -34,14 +37,13 @@ export default function PurchaseOrderTable({
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(
-        new Set(
-          purchaseOrders.filter((o) => o.status === "pending").map((o) => o.id),
-        ),
+        new Set(purchaseOrders.filter((o) => o.status === 0).map((o) => o.id)),
       );
     } else {
       setSelectedIds(new Set());
     }
   };
+  // 進貨的部分幫我加上幾個狀態，["已下單", "已到貨(TH)", "已出貨(TH)", "已到貨(TW)"]
 
   const handleSelectOne = (id: number, checked: boolean) => {
     const newSaved = new Set(selectedIds);
@@ -71,9 +73,14 @@ export default function PurchaseOrderTable({
     );
   }
 
-  const pendingCount = purchaseOrders.filter(
-    (o) => o.status === "pending",
-  ).length;
+  const pendingCount = purchaseOrders.filter((o) => o.status === 0).length;
+  const statusMap = [
+    { value: 0, label: "待處理", color: "bg-amber-100 text-amber-700" },
+    { value: 1, label: "已下單", color: "bg-amber-100 text-amber-700" },
+    { value: 2, label: "已到貨(TH)", color: "bg-blue-100 text-blue-700" },
+    { value: 3, label: "已出貨(TH)", color: "bg-blue-100 text-blue-700" },
+    { value: 4, label: "已到貨(TW)", color: "bg-green-100 text-green-700" },
+  ];
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -151,7 +158,7 @@ export default function PurchaseOrderTable({
                       onChange={(e) =>
                         handleSelectOne(order.id, e.target.checked)
                       }
-                      disabled={order.status !== "pending"}
+                      disabled={order.status !== 0}
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -197,13 +204,10 @@ export default function PurchaseOrderTable({
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                        order.status === "pending"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((s) => s.value === order.status)?.color || ""}`}
                     >
-                      {order.status === "pending" ? "待處理" : "已結單"}
+                      {statusMap.find((s) => s.value === order.status)?.label ||
+                        "-"}
                     </span>
                   </td>
                 </tr>
@@ -222,6 +226,7 @@ export default function PurchaseOrderTable({
                                 <tr>
                                   <th className="px-4 py-2">商品 ID</th>
                                   <th className="px-4 py-2">數量</th>
+                                  <th className="px-4 py-2">狀態</th>
                                   <th className="px-4 py-2">進價 (THB)</th>
                                   <th className="px-4 py-2">換算匯率</th>
                                   <th className="px-4 py-2">總成本 (TWD)</th>
@@ -238,6 +243,36 @@ export default function PurchaseOrderTable({
                                     </td>
                                     <td className="px-4 py-2 text-slate-600 font-mono">
                                       {item.quantity}
+                                    </td>
+                                    <td className="px-4 py-2 text-slate-600">
+                                      <select
+                                        className="bg-white border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                        value={item.status || 1}
+                                        onChange={(e) =>
+                                          onItemStatusChange?.(
+                                            item.id,
+                                            Number(e.target.value) as
+                                              | 1
+                                              | 2
+                                              | 3
+                                              | 4,
+                                          )
+                                        }
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {statusMap
+                                          .filter(
+                                            (status) => status.value !== 0,
+                                          )
+                                          .map((status) => (
+                                            <option
+                                              key={status.value}
+                                              value={status.value}
+                                            >
+                                              {status.label}
+                                            </option>
+                                          ))}
+                                      </select>
                                     </td>
                                     <td className="px-4 py-2 text-amber-600 font-medium">
                                       {item.foreignCost}

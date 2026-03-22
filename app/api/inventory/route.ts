@@ -1,9 +1,9 @@
-// app/api/inventory/route.ts
 import { NextResponse } from "next/server";
 import {
   getInventoryItems,
   addInventoryItem,
 } from "../../../lib/services/inventoryService";
+import { prisma } from "@/lib/prisma";
 
 // 取得庫存列表 (GET /api/inventory)
 export async function GET() {
@@ -60,5 +60,41 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("新增失敗:", error);
     return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const id = parseInt(params.id, 10);
+    const body = await request.json();
+    const { status } = body;
+
+    const updatedItem = await prisma.inventoryItem.update({
+      where: { id },
+      data: { status: Number(status) as 1 | 2 | 3 | 4 }, // 確保寫入數字
+    });
+    if (updatedItem.purchaseOrderId) {
+      // 找出該採購單底下所有的進貨商品
+      const allItems = await prisma.inventoryItem.findMany({
+        where: { purchaseOrderId: updatedItem.purchaseOrderId },
+      });
+
+      // 直接用 Math.min 找出所有商品中「進度最慢的」那一個狀態數字
+      const minStatus = Math.min(...allItems.map((item) => item.status));
+
+      // 將最小狀態同步回採購單
+      await prisma.purchaseOrder.update({
+        where: { id: updatedItem.purchaseOrderId },
+        data: { status: minStatus as 0 | 1 | 2 | 3 | 4 },
+      });
+    }
+
+    return NextResponse.json(updatedItem);
+  } catch (error) {
+    console.error("更新庫存狀態失敗:", error);
+    return NextResponse.json({ error: "更新失敗" }, { status: 500 });
   }
 }
