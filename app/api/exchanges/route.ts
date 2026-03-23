@@ -22,9 +22,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "請填寫完整資訊" }, { status: 400 });
     }
 
+    if (
+      body.createdAt != null &&
+      Number.isNaN(new Date(body.createdAt).getTime())
+    ) {
+      return NextResponse.json({ error: "日期格式錯誤" }, { status: 400 });
+    }
+
     const item = await createExchange(
       Number(body.twdSpent),
       Number(body.thbReceived),
+      body.createdAt,
     );
 
     return NextResponse.json({ message: "新增成功", item }, { status: 201 });

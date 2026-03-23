@@ -13,11 +13,18 @@ export async function getExchanges() {
   }));
 }
 
-export async function createExchange(twdSpent: number, thbReceived: number) {
+export async function createExchange(
+  twdSpent: number,
+  thbReceived: number,
+  createdAt?: string,
+) {
+  const parsedDate = createdAt ? new Date(createdAt) : undefined;
+
   const newRecord = await prisma.exchangeRecord.create({
     data: {
       twdSpent,
       thbReceived,
+      ...(parsedDate ? { createdAt: parsedDate } : {}),
     },
   });
 

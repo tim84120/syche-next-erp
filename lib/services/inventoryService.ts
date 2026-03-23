@@ -17,7 +17,6 @@ export async function recalculateAllInventoryCosts() {
   const batches = await prisma.exchangeRecord.findMany({
     orderBy: { id: "asc" },
   });
-  console.log("!!", batches);
 
   let currentBatchIndex = 0;
   // 複製一份 batches 的可用金額，用來追蹤扣款進度
@@ -32,7 +31,8 @@ export async function recalculateAllInventoryCosts() {
   const updates = [];
 
   for (const item of items) {
-    const totalThbNeeded = item.foreignCost * item.quantity; // 注意：過去是按 stockQuantity (原 quantity) 算總歷史消耗！
+    // 重算歷史成本時要用原始進貨量，不能用目前剩餘庫存量
+    const totalThbNeeded = item.foreignCost * item.stockQuantity;
     let remainingToCost = totalThbNeeded;
     let totalCostTwd = 0;
 
@@ -71,7 +71,9 @@ export async function recalculateAllInventoryCosts() {
 
     // 更新此 Item 的成本
     const singleTwdCost =
-      item.quantity > 0 ? Math.round(totalCostTwd / item.quantity) : 0;
+      item.stockQuantity > 0
+        ? Math.round(totalCostTwd / item.stockQuantity)
+        : 0;
     const singleAppliedRate =
       item.foreignCost > 0 ? singleTwdCost / item.foreignCost : 1;
 

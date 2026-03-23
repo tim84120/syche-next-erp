@@ -70,12 +70,16 @@ export default function SYCHE_ERP() {
   }, [exchangeRecords, inventory]);
 
   // 處理新增換匯
-  const handleAddExchange = async (twd: number, thb: number) => {
+  const handleAddExchange = async (twd: number, thb: number, date: string) => {
     try {
       const res = await fetch("/api/exchanges", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ twdSpent: twd, thbReceived: thb }),
+        body: JSON.stringify({
+          twdSpent: twd,
+          thbReceived: thb,
+          createdAt: date,
+        }),
       });
       if (res.ok) {
         const { item } = await res.json();

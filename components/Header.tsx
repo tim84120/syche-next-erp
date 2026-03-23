@@ -20,7 +20,7 @@ export default function Header() {
               🇹🇭 SYCHE{" "}
             </Link>
             <span className="text-slate-400 font-normal text-lg ml-2">
-              進銷存管理
+              進銷存系統
             </span>
           </h1>
           <nav className="hidden md:flex gap-4 ml-4">
