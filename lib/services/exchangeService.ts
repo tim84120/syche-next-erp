@@ -28,3 +28,24 @@ export async function createExchange(twdSpent: number, thbReceived: number) {
     date: new Date(newRecord.createdAt).toLocaleString(),
   };
 }
+
+export async function updateExchange(
+  id: number,
+  twdSpent: number,
+  thbReceived: number,
+) {
+  const updated = await prisma.exchangeRecord.update({
+    where: { id },
+    data: {
+      twdSpent,
+      thbReceived,
+    },
+  });
+
+  return {
+    id: updated.id,
+    twdSpent: updated.twdSpent,
+    thbReceived: updated.thbReceived,
+    date: new Date(updated.createdAt).toLocaleString(),
+  };
+}

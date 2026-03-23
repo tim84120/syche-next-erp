@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { InventoryItem, ExchangeRecord } from "./types/index";
 import WalletCard from "../components/WalletCard";
 import ExchangeForm from "../components/ExchangeForm";
+import ExchangeTable from "../components/ExchangeTable";
 import ProductForm from "../components/ProductForm";
 import InventoryTable from "../components/InventoryTable";
 
@@ -91,11 +92,55 @@ export default function SYCHE_ERP() {
     }
   };
 
+  const handleUpdateExchange = async (
+    id: number,
+    twdSpent: number,
+    thbReceived: number,
+  ) => {
+    try {
+      const res = await fetch(`/api/exchanges/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ twdSpent, thbReceived }),
+      });
+      if (res.ok) {
+        const { item } = await res.json();
+        setExchangeRecords((prev) => prev.map((r) => (r.id === id ? item : r)));
+      } else {
+        throw new Error("Update failed");
+      }
+    } catch (error) {
+      console.error("Failed to update exchange:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteExchange = async (id: number) => {
+    try {
+      const res = await fetch(`/api/exchanges/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setExchangeRecords((prev) => prev.filter((r) => r.id !== id));
+      } else {
+        throw new Error("Delete failed");
+      }
+    } catch (error) {
+      console.error("Failed to delete exchange:", error);
+      throw error;
+    }
+  };
+
   return (
     <>
       <main className="max-w-6xl mx-auto px-6 mt-8 space-y-8">
         <WalletCard stats={walletStats} />
         <ExchangeForm onAddRecord={handleAddExchange} />
+        <ExchangeTable
+          records={exchangeRecords}
+          onUpdateRecord={handleUpdateExchange}
+          onDeleteRecord={handleDeleteExchange}
+        />
         <InventoryTable inventory={inventory} />
       </main>
     </>

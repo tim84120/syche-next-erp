@@ -959,7 +959,7 @@ export default function OrdersPage() {
                                           e.stopPropagation();
                                           handleRemoveLinkItem(item.id);
                                         }}
-                                        className="text-red-500 hover:text-red-700 opacity-60 hover:opacity-100 flex-shrink-0"
+                                        className="text-red-500 hover:text-red-700 opacity-60 hover:opacity-100 shrink-0"
                                       >
                                         移除
                                       </button>

@@ -16,18 +16,18 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span className="text-2xl">🇹🇭</span> SYCHE{" "}
-            {session?.user && (
-              <span className="text-slate-400 font-normal text-lg ml-2">
-                進銷存管理 - {session.user.name}
-              </span>
-            )}
+            <Link href="/" className="text-2xl">
+              🇹🇭 SYCHE{" "}
+            </Link>
+            <span className="text-slate-400 font-normal text-lg ml-2">
+              進銷存管理
+            </span>
           </h1>
           <nav className="hidden md:flex gap-4 ml-4">
             <Link
-              href="/"
+              href="/inventory"
               className={
-                pathname === "/"
+                pathname === "/inventory"
                   ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
                   : "text-slate-500 hover:text-blue-600 font-medium transition-colors"
               }
@@ -56,7 +56,14 @@ export default function Header() {
             </Link>
           </nav>
         </div>
-        <div className="text-sm text-slate-500 hidden sm:block">v1.2.0</div>
+        <div className="text-sm text-slate-500 hidden sm:block">
+          {session?.user && (
+            <span className="text-slate-400 font-normal mr-2">
+              {session.user.name ?? ""}
+            </span>
+          )}
+          v1.2.0
+        </div>
       </div>
     </header>
   );
