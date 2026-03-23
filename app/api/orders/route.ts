@@ -5,7 +5,12 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     // 透過 Prisma 抓取所有訂單，並透過 include 順便把關聯的「商品明細 (items)」一起抓出來
-    const orders = await prisma.order.findMany({});
+    const orders = await prisma.order.findMany({
+      include: {
+        items: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
     return NextResponse.json(orders);
   } catch (error) {
     console.error("取得訂單失敗:", error);
@@ -56,16 +61,56 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { orderIds, status } = body; // 預期前端會傳來 { orderIds: ['ORD-xxx', ...], status: 'paid' }
-    // 使用 updateMany 一次更新多筆資料的狀態
-    await prisma.order.updateMany({
-      where: {
-        id: { in: orderIds },
-      },
-      data: {
-        status: status,
-      },
+    const { orderIds, status } = body;
+
+    // 找出這些訂單與其明細
+    const orders = await prisma.order.findMany({
+      where: { id: { in: orderIds } },
+      include: { items: true },
     });
+
+    for (const order of orders) {
+      await prisma.$transaction(async (tx) => {
+        if (status === "completed" && !order.isDeducted) {
+          // 狀態變更為「已完成」且尚未扣庫存 -> 扣減庫存
+          for (const item of order.items) {
+            if (item.inventoryItemId) {
+              await tx.inventoryItem.update({
+                where: { id: item.inventoryItemId },
+                data: { quantity: { decrement: item.quantity } },
+              });
+            }
+          }
+          // 更新訂單
+          await tx.order.update({
+            where: { id: order.id },
+            data: { status, isDeducted: true },
+          });
+        } else if (status !== "completed" && order.isDeducted) {
+          // 狀態從「已完成」改為其他，且已經扣過庫存 -> 把庫存加回來
+          for (const item of order.items) {
+            if (item.inventoryItemId) {
+              await tx.inventoryItem.update({
+                where: { id: item.inventoryItemId },
+                data: { quantity: { increment: item.quantity } },
+              });
+            }
+          }
+          // 更新訂單
+          await tx.order.update({
+            where: { id: order.id },
+            data: { status, isDeducted: false },
+          });
+        } else {
+          // 沒有庫存變動的純狀態更新
+          await tx.order.update({
+            where: { id: order.id },
+            data: { status },
+          });
+        }
+      });
+    }
+
     return NextResponse.json({ message: "狀態更新成功" });
   } catch (error) {
     console.error("更新狀態失敗:", error);

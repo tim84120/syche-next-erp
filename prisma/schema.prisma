@@ -97,7 +97,8 @@ model InventoryItem {
   foreignCost     Float
   appliedRate     Float
   twdCost         Int
-  quantity        Int
+  quantity        Int // 現有庫存數量
+  stockQuantity   Int            @default(0) // 進貨數量
   /// 狀態 Enum: 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
   status          Int            @default(1)
   /// 扣款方式: cash = 現金, card = 刷卡
@@ -106,6 +107,7 @@ model InventoryItem {
   purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  orderItems      OrderItem[]
 }
 
 // 訂單表
@@ -121,6 +123,7 @@ model Order {
   lineName     String? // Line名字
   email        String? // Email
   status       String      @default("placed")
+  isDeducted   Boolean     @default(false)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   items        OrderItem[]
@@ -128,14 +131,17 @@ model Order {
 
 // 訂單明細表
 model OrderItem {
-  id           Int    @id @default(autoincrement())
-  orderId      String
-  brand        String // 品牌
-  name         String // 品名
-  style        String // 款式
-  size         String // 尺寸
-  sellPriceTwd Int // 單價 (TWD)
-  order        Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id              Int            @id @default(autoincrement())
+  orderId         String
+  brand           String? // 品牌
+  name            String? // 品名
+  style           String? // 款式
+  size            String? // 尺寸
+  sellPriceTwd    Int // 單價 (TWD)
+  quantity        Int            @default(1)
+  inventoryItemId Int?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 // 採購單表

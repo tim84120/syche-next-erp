@@ -13,9 +13,15 @@ export type OrderStatus =
 export type FilterStatus = "all" | OrderStatus;
 
 interface OrderItem {
-  productName: string;
-  quantity: number;
+  id: number;
+  orderId: string;
+  brand?: string | null;
+  name?: string | null;
+  style?: string | null;
+  size?: string | null;
   sellPriceTwd: number;
+  quantity: number;
+  inventoryItemId?: number | null;
 }
 
 export interface Order {
@@ -31,6 +37,7 @@ export interface Order {
   email?: string | null;
   items: OrderItem[];
   status: OrderStatus;
+  isDeducted?: boolean;
   createdAt: string;
 }
 
@@ -181,9 +188,23 @@ const statusConfig: Record<OrderStatus, { label: string; colorClass: string }> =
     },
   };
 
+// import InventoryItem if available, else define simple type
+interface LocalInventoryItem {
+  id: number;
+  brand: string;
+  name: string;
+  style: string;
+  size: string;
+  quantity: number;
+  twdCost: number;
+}
+
 export default function OrdersPage() {
   // 1. 初始化變成空陣列，等待從 API 抓資料
   const [orders, setOrders] = useState<Order[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<LocalInventoryItem[]>(
+    [],
+  );
   const [, setIsLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -238,9 +259,66 @@ export default function OrdersPage() {
     }
   };
 
+  const fetchInventory = async () => {
+    try {
+      const res = await fetch("/api/inventory");
+      const data = await res.json();
+      if (res.ok) {
+        setInventoryItems(data);
+      }
+    } catch (error) {}
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchInventory();
   }, []);
+
+  // --- 管理訂單與庫存的連動 ---
+  const handleAddLinkItem = async (
+    orderId: string,
+    inventoryItemId: number,
+    quantity: number,
+  ) => {
+    if (!inventoryItemId || quantity <= 0) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inventoryItemId,
+          quantity,
+          sellPriceTwd: 0, // 暫時設為0或之後可調整
+        }),
+      });
+      if (res.ok) {
+        alert("已成功關聯庫存商品！");
+        fetchOrders(); // 重新抓取包含明細的訂單
+      } else {
+        const err = await res.json();
+        alert(`關聯失敗：${err.error}`);
+      }
+    } catch (e) {
+      alert("關聯發生錯誤");
+    }
+  };
+
+  const handleRemoveLinkItem = async (itemId: number) => {
+    if (!confirm("確定要解除關聯此商品嗎？")) return;
+    try {
+      const res = await fetch(`/api/orders/items/${itemId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("已解除關聯！");
+        fetchOrders();
+      } else {
+        alert("解除關聯失敗");
+      }
+    } catch (e) {
+      alert("解除發生錯誤");
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     if (currentFilter === "all") return orders;
@@ -831,12 +909,122 @@ export default function OrdersPage() {
                           </div>
                         )}
                         {/* 提示展開的小圖示，在滑過時顯示 (或根據狀態顯示) */}
-                        {(order.detail || order.note) && (
+                        {(order.detail || order.note || true) && (
                           <div
                             className="absolute right-0 top-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-blue-500 text-xs bg-white/80 rounded px-1 border"
                             onClick={() => toggleDetail(order.id)}
                           >
                             {expandedDetails[order.id] ? "收合" : "展開"}
+                          </div>
+                        )}
+
+                        {/* 顯示關聯庫存區塊 - 當狀態為 expanded 時顯示 */}
+                        {expandedDetails[order.id] && (
+                          <div
+                            className="mt-4 pt-3 border-t border-slate-100 cursor-default"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <h4 className="font-bold text-xs text-slate-700 mb-2 flex items-center justify-between">
+                              關聯庫存商品
+                              {order.isDeducted && (
+                                <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px]">
+                                  已扣減庫存
+                                </span>
+                              )}
+                            </h4>
+
+                            {order.items && order.items.length > 0 ? (
+                              <ul className="space-y-1.5 mb-3">
+                                {order.items.map((item) => (
+                                  <li
+                                    key={item.id}
+                                    className="flex items-center justify-between text-xs bg-slate-50 p-1.5 rounded border border-slate-100"
+                                  >
+                                    <span
+                                      className="truncate pr-2"
+                                      title={`${item.brand || ""} ${item.name || ""}`}
+                                    >
+                                      {item.brand || ""} {item.name || ""}{" "}
+                                      {item.style ? `(${item.style})` : ""} -{" "}
+                                      {item.size}{" "}
+                                      <strong className="text-blue-600 ml-1">
+                                        x{item.quantity}
+                                      </strong>
+                                    </span>
+                                    {(!order.isDeducted ||
+                                      order.status !== "completed") && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveLinkItem(item.id);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 opacity-60 hover:opacity-100 flex-shrink-0"
+                                      >
+                                        移除
+                                      </button>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="text-xs text-slate-400 mb-3 italic">
+                                尚無關聯商品
+                              </div>
+                            )}
+
+                            {(!order.isDeducted ||
+                              order.status !== "completed") && (
+                              <div className="flex flex-col gap-2 mt-2">
+                                <select
+                                  id={`select-inv-${order.id}`}
+                                  className="w-full text-xs border border-slate-200 rounded p-1.5 bg-white outline-none focus:border-blue-400"
+                                >
+                                  <option value="">-- 選擇庫存商品 --</option>
+                                  {inventoryItems.map((inv) => (
+                                    <option key={inv.id} value={inv.id}>
+                                      {inv.brand} {inv.name} {inv.style}{" "}
+                                      {inv.size} (餘: {inv.quantity})
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="number"
+                                    id={`qty-inv-${order.id}`}
+                                    defaultValue={1}
+                                    min={1}
+                                    className="flex-1 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
+                                    placeholder="數量"
+                                  />
+                                  <button
+                                    type="button"
+                                    className="bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 text-xs px-3 py-1.5 rounded font-medium transition-colors whitespace-nowrap"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const invId = (
+                                        document.getElementById(
+                                          `select-inv-${order.id}`,
+                                        ) as HTMLSelectElement
+                                      ).value;
+                                      const qty = (
+                                        document.getElementById(
+                                          `qty-inv-${order.id}`,
+                                        ) as HTMLInputElement
+                                      ).value;
+                                      if (invId)
+                                        handleAddLinkItem(
+                                          order.id,
+                                          Number(invId),
+                                          Number(qty),
+                                        );
+                                    }}
+                                  >
+                                    加入關聯
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </td>

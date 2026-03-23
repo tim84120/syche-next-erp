@@ -8,7 +8,8 @@ export interface InventoryItem {
   foreignCost: number;
   appliedRate: number;
   twdCost: number;
-  quantity: number;
+  quantity: number; // 現有庫存數量
+  stockQuantity: number; // 進貨數量
   status?: number; // 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
   paymentMethod?: string;
   purchaseOrderId?: number | null;

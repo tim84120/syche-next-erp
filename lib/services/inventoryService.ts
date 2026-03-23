@@ -91,6 +91,7 @@ export async function addInventoryItem(
       appliedRate: singleAppliedRate,
       twdCost: singleTwdCost,
       quantity,
+      stockQuantity: quantity,
       paymentMethod,
       purchaseOrderId,
     },

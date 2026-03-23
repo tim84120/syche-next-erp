@@ -9,7 +9,7 @@ export default function InventoryTable({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h2 className="text-lg font-bold text-slate-800">庫存與精準成本明細</h2>
+        <h2 className="text-lg font-bold text-slate-800">進貨/庫存</h2>
         <span className="text-sm text-slate-500 font-medium">
           共 {inventory.length} 筆紀錄
         </span>
@@ -23,11 +23,23 @@ export default function InventoryTable({
                 scope="col"
                 className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                品牌 / 品名
+                ID
               </th>
               <th
                 scope="col"
                 className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+              >
+                品牌 / 品名
+              </th>
+              <th
+                scope="col"
+                className="px-8 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
+              >
+                庫存數量
+              </th>
+              <th
+                scope="col"
+                className="px-8 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
               >
                 進貨數量
               </th>
@@ -74,13 +86,21 @@ export default function InventoryTable({
                   className="hover:bg-slate-50/80 transition-colors"
                 >
                   <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                    #{item.id}
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     <div className="font-medium text-slate-900">
                       {item.brand}
                     </div>
                     <div className="text-sm text-slate-500">{item.name}</div>
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-600">
+                  <td className="px-8 py-4 whitespace-nowrap text-sm text-center text-slate-600">
                     <span className="bg-slate-100 px-2.5 py-1 rounded-md font-semibold">
+                      {item.stockQuantity}
+                    </span>
+                  </td>
+                  <td className="px-8 py-4 whitespace-nowrap text-sm text-center text-slate-600">
+                    <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">
                       {item.quantity}
                     </span>
                   </td>
