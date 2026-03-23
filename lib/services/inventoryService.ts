@@ -32,7 +32,7 @@ export async function recalculateAllInventoryCosts() {
 
   for (const item of items) {
     // 重算歷史成本時要用原始進貨量，不能用目前剩餘庫存量
-    const totalThbNeeded = item.foreignCost * item.stockQuantity;
+    const totalThbNeeded = item.foreignCost * item.quantity;
     let remainingToCost = totalThbNeeded;
     let totalCostTwd = 0;
 
@@ -71,9 +71,7 @@ export async function recalculateAllInventoryCosts() {
 
     // 更新此 Item 的成本
     const singleTwdCost =
-      item.stockQuantity > 0
-        ? Math.round(totalCostTwd / item.stockQuantity)
-        : 0;
+      item.quantity > 0 ? Math.round(totalCostTwd / item.quantity) : 0;
     const singleAppliedRate =
       item.foreignCost > 0 ? singleTwdCost / item.foreignCost : 1;
 

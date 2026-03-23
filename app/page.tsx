@@ -49,11 +49,11 @@ export default function SYCHE_ERP() {
       0,
     );
     const totalThbOut = cashInventory.reduce(
-      (sum, item) => sum + item.foreignCost * item.stockQuantity,
+      (sum, item) => sum + item.foreignCost * item.quantity,
       0,
     );
     const totalTwdOut = cashInventory.reduce(
-      (sum, item) => sum + item.twdCost * item.stockQuantity,
+      (sum, item) => sum + item.twdCost * item.quantity,
       0,
     );
 

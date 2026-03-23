@@ -279,6 +279,7 @@ export default function OrdersPage() {
     orderId: string,
     inventoryItemId: number,
     quantity: number,
+    sellPriceTwd: number,
   ) => {
     if (!inventoryItemId || quantity <= 0) return;
     try {
@@ -288,7 +289,7 @@ export default function OrdersPage() {
         body: JSON.stringify({
           inventoryItemId,
           quantity,
-          sellPriceTwd: 0, // 暫時設為0或之後可調整
+          sellPriceTwd,
         }),
       });
       if (res.ok) {
@@ -994,8 +995,16 @@ export default function OrdersPage() {
                                     id={`qty-inv-${order.id}`}
                                     defaultValue={1}
                                     min={1}
-                                    className="flex-1 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
+                                    className="w-16 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
                                     placeholder="數量"
+                                  />
+                                  <input
+                                    type="number"
+                                    id={`price-inv-${order.id}`}
+                                    defaultValue={0}
+                                    min={0}
+                                    className="flex-1 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
+                                    placeholder="銷售金額 (TWD)"
                                   />
                                   <button
                                     type="button"
@@ -1012,11 +1021,17 @@ export default function OrdersPage() {
                                           `qty-inv-${order.id}`,
                                         ) as HTMLInputElement
                                       ).value;
+                                      const price = (
+                                        document.getElementById(
+                                          `price-inv-${order.id}`,
+                                        ) as HTMLInputElement
+                                      ).value;
                                       if (invId)
                                         handleAddLinkItem(
                                           order.id,
                                           Number(invId),
                                           Number(qty),
+                                          Number(price),
                                         );
                                     }}
                                   >

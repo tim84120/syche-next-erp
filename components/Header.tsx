@@ -54,6 +54,16 @@ export default function Header() {
             >
               訂單管理
             </Link>
+            <Link
+              href="/reports"
+              className={
+                pathname?.startsWith("/reports")
+                  ? "text-blue-600 font-bold border-b-2 border-blue-600 pb-1"
+                  : "text-slate-500 hover:text-blue-600 font-medium transition-colors"
+              }
+            >
+              財務報表
+            </Link>
           </nav>
         </div>
         <div className="text-sm text-slate-500 hidden sm:block">
