@@ -196,6 +196,7 @@ interface LocalInventoryItem {
   style: string;
   size: string;
   quantity: number;
+  stockQuantity: number;
   twdCost: number;
 }
 
@@ -982,12 +983,17 @@ export default function OrdersPage() {
                                   className="w-full text-xs border border-slate-200 rounded p-1.5 bg-white outline-none focus:border-blue-400"
                                 >
                                   <option value="">-- 選擇庫存商品 --</option>
-                                  {inventoryItems.map((inv) => (
-                                    <option key={inv.id} value={inv.id}>
-                                      {inv.brand} {inv.name} {inv.style}{" "}
-                                      {inv.size} (餘: {inv.quantity})
-                                    </option>
-                                  ))}
+                                  {inventoryItems.map((inv) => {
+                                    if (inv.stockQuantity > 0) {
+                                      return (
+                                        <option key={inv.id} value={inv.id}>
+                                          {inv.brand} {inv.name} {inv.style}{" "}
+                                          {inv.size} (餘: {inv.stockQuantity})
+                                        </option>
+                                      );
+                                    }
+                                    return null;
+                                  })}
                                 </select>
                                 <div className="flex gap-2">
                                   <input
