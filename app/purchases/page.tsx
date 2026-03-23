@@ -61,11 +61,11 @@ export default function PurchasesPage() {
       0,
     );
     const totalThbOut = cashInventory.reduce(
-      (sum, item) => sum + item.foreignCost * item.quantity,
+      (sum, item) => sum + item.foreignCost * item.stockQuantity,
       0,
     );
     const totalTwdOut = cashInventory.reduce(
-      (sum, item) => sum + item.twdCost * item.quantity,
+      (sum, item) => sum + item.twdCost * item.stockQuantity,
       0,
     );
 

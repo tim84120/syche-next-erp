@@ -12,34 +12,28 @@ export default function SYCHE_ERP() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
 
-  useEffect(() => {
-    let ignore = false;
+  const fetchInitialData = async () => {
+    try {
+      const [invRes, excRes] = await Promise.all([
+        fetch("/api/inventory"),
+        fetch("/api/exchanges"),
+      ]);
 
-    const fetchInitialData = async () => {
-      try {
-        const [invRes, excRes] = await Promise.all([
-          fetch("/api/inventory"),
-          fetch("/api/exchanges"),
-        ]);
-
-        if (invRes.ok) {
-          const invData = await invRes.json();
-          if (!ignore) setInventory(invData);
-        }
-        if (excRes.ok) {
-          const excData = await excRes.json();
-          if (!ignore) setExchangeRecords(excData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch initial data:", error);
+      if (invRes.ok) {
+        const invData = await invRes.json();
+        setInventory(invData);
       }
-    };
+      if (excRes.ok) {
+        const excData = await excRes.json();
+        setExchangeRecords(excData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch initial data:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchInitialData();
-
-    return () => {
-      ignore = true;
-    };
   }, []);
   // 計算資金池現況
   const walletStats = useMemo(() => {
@@ -55,11 +49,11 @@ export default function SYCHE_ERP() {
       0,
     );
     const totalThbOut = cashInventory.reduce(
-      (sum, item) => sum + item.foreignCost * item.quantity,
+      (sum, item) => sum + item.foreignCost * item.stockQuantity,
       0,
     );
     const totalTwdOut = cashInventory.reduce(
-      (sum, item) => sum + item.twdCost * item.quantity,
+      (sum, item) => sum + item.twdCost * item.stockQuantity,
       0,
     );
 
@@ -141,7 +135,7 @@ export default function SYCHE_ERP() {
           onUpdateRecord={handleUpdateExchange}
           onDeleteRecord={handleDeleteExchange}
         />
-        <InventoryTable inventory={inventory} />
+        <InventoryTable inventory={inventory} onRefresh={fetchInitialData} />
       </main>
     </>
   );

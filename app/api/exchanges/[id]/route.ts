@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { updateExchange } from "../../../lib/services/exchangeService";
-import { prisma } from "../../../lib/prisma";
+import { updateExchange } from "@/lib/services/exchangeService";
+import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   request: Request,

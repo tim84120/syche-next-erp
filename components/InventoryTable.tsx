@@ -1,15 +1,65 @@
+"use client";
+
 import type { InventoryItem } from "@/app/types/index";
 import { statusMap } from "@/constants";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 export default function InventoryTable({
   inventory,
+  onRefresh,
 }: {
   inventory: InventoryItem[];
+  onRefresh?: () => void;
 }) {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
+  const handleRecalculate = async () => {
+    if (
+      !confirm(
+        "確定要重新計算所有進貨商品的鎖定匯率嗎？\n這將會根據最新的換匯紀錄重新分配所有商品的台幣成本。",
+      )
+    ) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    try {
+      const res = await fetch("/api/inventory/recalculate", {
+        method: "POST",
+      });
+      if (res.ok) {
+        alert("重新計算完成！");
+        if (onRefresh) onRefresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "重新計算失敗");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("重新計算發生錯誤");
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h2 className="text-lg font-bold text-slate-800">進貨/庫存</h2>
+        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-4">
+          進貨/庫存
+          {isAdmin && (
+            <button
+              onClick={handleRecalculate}
+              disabled={isRecalculating}
+              className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md font-semibold transition-colors disabled:opacity-50"
+            >
+              {isRecalculating ? "計算中..." : "重新整理匯率成本"}
+            </button>
+          )}
+        </h2>
         <span className="text-sm text-slate-500 font-medium">
           共 {inventory.length} 筆紀錄
         </span>

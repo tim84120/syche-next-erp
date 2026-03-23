@@ -6,6 +6,91 @@ export async function getInventoryItems() {
   });
 }
 
+export async function recalculateAllInventoryCosts() {
+  // 1. 取得所有現金付款的進貨紀錄 (依建立時間由舊到新)
+  const items = await prisma.inventoryItem.findMany({
+    where: { paymentMethod: "cash" },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // 2. 取得所有換匯紀錄 (依 ID/建立時間由舊到新)
+  const batches = await prisma.exchangeRecord.findMany({
+    orderBy: { id: "asc" },
+  });
+  console.log("!!", batches);
+
+  let currentBatchIndex = 0;
+  // 複製一份 batches 的可用金額，用來追蹤扣款進度
+  const batchState = batches.map((b) => ({
+    id: b.id,
+    thbReceived: b.thbReceived,
+    twdSpent: b.twdSpent,
+    thbRemaining: b.thbReceived,
+    twdRemaining: b.twdSpent,
+  }));
+
+  const updates = [];
+
+  for (const item of items) {
+    const totalThbNeeded = item.foreignCost * item.quantity; // 注意：過去是按 stockQuantity (原 quantity) 算總歷史消耗！
+    let remainingToCost = totalThbNeeded;
+    let totalCostTwd = 0;
+
+    // 用同樣的 FIFO 邏輯
+    while (remainingToCost > 0 && currentBatchIndex < batchState.length) {
+      const batch = batchState[currentBatchIndex];
+
+      if (batch.thbRemaining <= 0) {
+        currentBatchIndex++;
+        continue;
+      }
+
+      if (batch.thbRemaining >= remainingToCost) {
+        // 這批夠扣
+        const costForPart =
+          (batch.twdSpent / batch.thbReceived) * remainingToCost;
+        totalCostTwd += costForPart;
+        batch.thbRemaining -= remainingToCost;
+        remainingToCost = 0;
+      } else {
+        // 這批不夠扣，全扣完然後換下一批
+        const costForPart =
+          (batch.twdSpent / batch.thbReceived) * batch.thbRemaining;
+        totalCostTwd += costForPart;
+        remainingToCost -= batch.thbRemaining;
+        batch.thbRemaining = 0;
+        currentBatchIndex++;
+      }
+    }
+
+    if (remainingToCost > 0.001) {
+      // 這裡會有問題：如果把匯率改小了，導致資金池不足以支付歷史進貨，就會卡住
+      // 為了不讓系統崩潰，如果 THB 不足，就直接按最近一次的或 1 來算
+      totalCostTwd += remainingToCost * 1.0;
+    }
+
+    // 更新此 Item 的成本
+    const singleTwdCost =
+      item.quantity > 0 ? Math.round(totalCostTwd / item.quantity) : 0;
+    const singleAppliedRate =
+      item.foreignCost > 0 ? singleTwdCost / item.foreignCost : 1;
+
+    // 取出並推入更新陣列
+    updates.push(
+      prisma.inventoryItem.update({
+        where: { id: item.id },
+        data: {
+          twdCost: singleTwdCost,
+          appliedRate: singleAppliedRate,
+        },
+      }),
+    );
+  }
+
+  // 執行批次更新
+  await prisma.$transaction(updates);
+}
+
 export async function addInventoryItem(
   name: string,
   brand: string,
