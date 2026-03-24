@@ -62,10 +62,10 @@ export default function PurchaseOrderTable({
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <h2 className="text-xl font-bold text-slate-800">採購訂單列表</h2>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">
             共 {purchaseOrders.length} 筆
           </span>
@@ -84,7 +84,7 @@ export default function PurchaseOrderTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600 w-12 text-center">
+              <th className="w-12 px-3 py-3 text-center text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 <input
                   type="checkbox"
                   className="rounded border-gray-300 text-amber-500 focus:ring-amber-500"
@@ -94,25 +94,25 @@ export default function PurchaseOrderTable({
                   }
                 />
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 狀態
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 單號 / 日期
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 品牌 / 品名
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 款式 / 尺寸
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 數量
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 連結
               </th>
-              <th className="px-6 py-4 text-sm font-semibold text-slate-600">
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 備註
               </th>
             </tr>
@@ -127,7 +127,7 @@ export default function PurchaseOrderTable({
                   }`}
                 >
                   <td
-                    className="px-6 py-4 text-center"
+                    className="px-3 py-3 text-center sm:px-6 sm:py-4"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <input
@@ -140,7 +140,7 @@ export default function PurchaseOrderTable({
                       disabled={order.status !== 0}
                     />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
                     <span
                       className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((s) => s.value === order.status)?.color || ""}`}
                     >
@@ -148,7 +148,7 @@ export default function PurchaseOrderTable({
                         "-"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="whitespace-nowrap px-3 py-3 sm:px-6 sm:py-4">
                     <div className="font-mono text-xs text-slate-600 font-bold mb-1">
                       {order.orderNumber || "-"}
                     </div>
@@ -156,25 +156,25 @@ export default function PurchaseOrderTable({
                       {new Date(order.createdAt).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
                     <div className="font-medium text-slate-900">
                       {order.brand}
                     </div>
                     <div className="text-sm text-slate-500">{order.name}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
                     <div className="text-sm text-slate-800">{order.style}</div>
                     <div className="text-sm text-slate-500">
                       Size: {order.size}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
                     <div className="text-sm text-slate-500">
                       {order.quantity}
                     </div>
                   </td>
                   <td
-                    className="px-6 py-4"
+                    className="px-3 py-3 sm:px-6 sm:py-4"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <a
@@ -186,7 +186,7 @@ export default function PurchaseOrderTable({
                       查看此商品
                     </a>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
+                  <td className="max-w-xs truncate px-3 py-3 text-sm text-slate-600 sm:px-6 sm:py-4">
                     {order.note || "-"}
                   </td>
                 </tr>
@@ -194,8 +194,8 @@ export default function PurchaseOrderTable({
                   order.inventoryItems &&
                   order.inventoryItems.length > 0 && (
                     <tr className="bg-slate-50/50">
-                      <td colSpan={8} className="px-6 py-4">
-                        <div className="pl-12">
+                      <td colSpan={8} className="px-3 py-3 sm:px-6 sm:py-4">
+                        <div className="pl-2 sm:pl-12">
                           <h4 className="text-sm font-semibold text-slate-700 mb-2">
                             進貨明細
                           </h4>

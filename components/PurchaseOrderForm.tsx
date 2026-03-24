@@ -50,8 +50,8 @@ export default function PurchaseOrderForm({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mb-8 sm:p-8">
+      <div className="mb-6 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl">
           🛒
         </div>
@@ -155,11 +155,11 @@ export default function PurchaseOrderForm({
           />
         </div>
 
-        <div className="md:col-span-2 lg:col-span-3 flex justify-end mt-2">
+        <div className="mt-2 flex md:col-span-2 lg:col-span-3 md:justify-end">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="w-full rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 md:w-auto"
           >
             {isSubmitting ? "建立中..." : "送出採購訂單"}
           </button>

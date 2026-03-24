@@ -163,8 +163,8 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
     };
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 transition-shadow hover:shadow-md">
-        <div className="flex items-center justify-between mb-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-8">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 text-xl">
               📦
@@ -174,7 +174,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           <button
             type="button"
             onClick={handleAddItem}
-            className="px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors"
+            className="w-full rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-amber-100 sm:w-auto"
           >
             + 新增一筆商品
           </button>
@@ -198,7 +198,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
                 <h3 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">
                   Item {index + 1}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                       品牌
@@ -293,7 +293,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
             ))}
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex flex-col md:flex-row gap-4 items-end justify-between">
+          <div className="flex flex-col gap-4 border-t border-slate-100 pt-4 md:flex-row md:items-end md:justify-between">
             <div className="w-full md:w-1/2">
               <label className="flex text-sm font-semibold text-slate-700 mb-1.5 items-center gap-2">
                 <span>折價券抵扣 (THB)</span>
@@ -341,7 +341,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
               </div>
             </div>
 
-            <div className="bg-amber-50/50 rounded-lg p-4 w-full md:w-1/2 flex justify-between items-center border border-amber-100">
+            <div className="flex w-full items-center justify-between rounded-lg border border-amber-100 bg-amber-50/50 p-4 md:w-1/2">
               <span className="text-sm font-medium text-amber-800">
                 總結抵扣後金額
               </span>

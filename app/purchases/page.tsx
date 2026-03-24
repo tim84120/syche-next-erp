@@ -11,6 +11,8 @@ import type {
   ExchangeRecord,
 } from "~/types/index";
 
+type MobileSectionKey = "purchase-order" | "product-import" | "purchase-list";
+
 const toDateInputValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -24,6 +26,9 @@ export default function PurchasesPage() {
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [, setIsLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] =
+    useState<MobileSectionKey>("purchase-order");
   const today = toDateInputValue(new Date());
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
@@ -165,6 +170,57 @@ export default function PurchasesPage() {
     }
   };
 
+  const mobileSections: {
+    key: MobileSectionKey;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      key: "purchase-order",
+      label: "建立採購單",
+      description: "新增採購需求",
+    },
+    {
+      key: "product-import",
+      label: "商品進貨",
+      description: "批次入庫與扣款",
+    },
+    {
+      key: "purchase-list",
+      label: "訂單列表",
+      description: "查看與更新狀態",
+    },
+  ];
+
+  const activeSectionMeta =
+    mobileSections.find((section) => section.key === activeSection) ??
+    mobileSections[0];
+
+  const purchaseOrderSection = (
+    <PurchaseOrderForm onOrderAdded={fetchInitialData} />
+  );
+
+  const productImportSection = (
+    <ProductForm
+      ref={productFormRef}
+      walletStats={walletStats}
+      onAddProducts={handleAddProducts}
+    />
+  );
+
+  const purchaseListSection = (
+    <PurchaseOrderTable
+      purchaseOrders={purchaseOrders}
+      onImportSelected={(selectedOrders) => {
+        if (productFormRef.current) {
+          productFormRef.current.importProducts(selectedOrders);
+          setActiveSection("product-import");
+        }
+      }}
+      onItemStatusChange={handleItemStatusChange}
+    />
+  );
+
   if (!session?.user) {
     return (
       <div className="p-8 text-center text-gray-500">請先登入以檢視此頁面</div>
@@ -172,27 +228,27 @@ export default function PurchasesPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex justify-between items-center mb-4">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">採購管理</h1>
+          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">採購管理</h1>
           <p className="text-gray-600">管理採購訂單需求、實體進貨入庫</p>
         </div>
-        <div className="flex items-end gap-3">
-          <label className="text-sm text-slate-600">
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <label className="min-w-0 text-sm text-slate-600">
             起始日
             <input
               type="date"
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              className="mt-1 block w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-600">
+          <label className="min-w-0 text-sm text-slate-600">
             結束日
             <input
               type="date"
-              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              className="mt-1 block w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -200,23 +256,84 @@ export default function PurchasesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <PurchaseOrderForm onOrderAdded={fetchInitialData} />
+      <div className="md:hidden">
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                {activeSectionMeta.label}
+              </p>
+              <p className="text-xs text-slate-500">
+                {activeSectionMeta.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label="切換採購功能"
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700"
+            >
+              <span className="flex flex-col gap-1.5">
+                <span className="block h-0.5 w-5 rounded-full bg-current" />
+                <span className="block h-0.5 w-5 rounded-full bg-current" />
+                <span className="block h-0.5 w-5 rounded-full bg-current" />
+              </span>
+            </button>
+          </div>
+          {mobileMenuOpen && (
+            <div className="absolute left-4 right-4 top-[calc(100%+0.75rem)] z-20 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
+              {mobileSections.map((section) => (
+                <button
+                  key={section.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveSection(section.key);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition-colors ${
+                    activeSection === section.key
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="font-medium">{section.label}</span>
+                  <span className="text-xs text-slate-400">
+                    {section.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        <ProductForm
-          ref={productFormRef}
-          walletStats={walletStats}
-          onAddProducts={handleAddProducts}
-        />
-        <PurchaseOrderTable
-          purchaseOrders={purchaseOrders}
-          onImportSelected={(selectedOrders) => {
-            if (productFormRef.current) {
-              productFormRef.current.importProducts(selectedOrders);
+        <div className="mt-4 space-y-0">
+          <div
+            className={
+              activeSection === "purchase-order" ? undefined : "hidden"
             }
-          }}
-          onItemStatusChange={handleItemStatusChange}
-        />
+          >
+            {purchaseOrderSection}
+          </div>
+          <div
+            className={
+              activeSection === "product-import" ? undefined : "hidden"
+            }
+          >
+            {productImportSection}
+          </div>
+          <div
+            className={activeSection === "purchase-list" ? undefined : "hidden"}
+          >
+            {purchaseListSection}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden grid-cols-1 gap-8 md:grid">
+        {purchaseOrderSection}
+        {productImportSection}
+        {purchaseListSection}
       </div>
     </div>
   );
