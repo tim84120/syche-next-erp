@@ -2,27 +2,49 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import ProductForm, { ProductFormRef } from "../../components/ProductForm";
-import PurchaseOrderForm from "../../components/PurchaseOrderForm";
-import PurchaseOrderTable from "../../components/PurchaseOrderTable";
-import { InventoryItem, ExchangeRecord } from "../types/index";
+import ProductForm, { ProductFormRef } from "@/components/ProductForm";
+import PurchaseOrderForm from "@/components/PurchaseOrderForm";
+import PurchaseOrderTable from "@/components/PurchaseOrderTable";
+import type {
+  PurchaseOrder,
+  InventoryItem,
+  ExchangeRecord,
+} from "~/types/index";
+
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function PurchasesPage() {
   const { data: session } = useSession();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [, setIsLoading] = useState(true);
+  const today = toDateInputValue(new Date());
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
 
   const productFormRef = useRef<ProductFormRef>(null);
 
-  const fetchInitialData = async () => {
+  const fetchInitialData = async (
+    rangeStart = startDate,
+    rangeEnd = endDate,
+  ) => {
     setIsLoading(true);
     try {
+      const purchaseQuery = new URLSearchParams({
+        startDate: rangeStart,
+        endDate: rangeEnd,
+      });
+
       const [invRes, excRes, poRes] = await Promise.all([
         fetch("/api/inventory"),
         fetch("/api/exchanges"),
-        fetch("/api/purchases"),
+        fetch(`/api/purchases?${purchaseQuery.toString()}`),
       ]);
 
       if (invRes.ok) {
@@ -46,7 +68,7 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [startDate, endDate]);
 
   const walletStats = useMemo(() => {
     const cashInventory = inventory.filter(
@@ -155,6 +177,26 @@ export default function PurchasesPage() {
         <div>
           <h1 className="text-3xl font-bold mb-2">採購管理</h1>
           <p className="text-gray-600">管理採購訂單需求、實體進貨入庫</p>
+        </div>
+        <div className="flex items-end gap-3">
+          <label className="text-sm text-slate-600">
+            起始日
+            <input
+              type="date"
+              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </label>
+          <label className="text-sm text-slate-600">
+            結束日
+            <input
+              type="date"
+              className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </label>
         </div>
       </div>
 

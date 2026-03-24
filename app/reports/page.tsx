@@ -93,8 +93,7 @@ export default function FinancialReportsPage() {
   const [loading, setLoading] = useState(true);
 
   const today = new Date();
-  const defaultStart = new Date(today);
-  defaultStart.setDate(today.getDate() - 30);
+  const defaultStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const [startDate, setStartDate] = useState(toDateInputValue(defaultStart));
   const [endDate, setEndDate] = useState(toDateInputValue(today));

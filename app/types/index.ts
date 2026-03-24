@@ -28,3 +28,25 @@ export interface WalletStats {
   balance: number;
   avgRate: number;
 }
+
+export interface PurchaseOrder {
+  id: number;
+  orderNumber: string;
+  brand: string;
+  name: string;
+  style: string;
+  size: string;
+  quantity: number;
+  link: string;
+  note: string | null;
+  status: 0 | 1 | 2 | 3 | 4; // 0 = pending, 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
+  createdAt: string;
+  inventoryItems?: {
+    id: number;
+    foreignCost: number;
+    appliedRate: number;
+    twdCost: number;
+    quantity: number;
+    status: 1 | 2 | 3 | 4; // 1 = 已下單, 2 = 已到貨(TH), 3 = 已出貨(TH), 4 = 已到貨(TW)
+  }[];
+}

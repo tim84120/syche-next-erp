@@ -1,7 +1,16 @@
 import { prisma } from "@/lib/prisma";
 
-export async function getPurchaseOrders() {
+export async function getPurchaseOrders(startDate?: Date, endDate?: Date) {
   return await prisma.purchaseOrder.findMany({
+    where:
+      startDate && endDate
+        ? {
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }
+        : undefined,
     include: {
       inventoryItems: true,
     },

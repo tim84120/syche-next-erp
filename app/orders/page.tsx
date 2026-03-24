@@ -249,7 +249,7 @@ export default function OrdersPage() {
         throw new Error(`API 發生錯誤，狀態碼：${res.status}`);
       }
 
-      const formattedData = data.map((order: any) => ({
+      const formattedData = data.map((order: Order) => ({
         ...order,
         createdAt: new Date(order.createdAt).toLocaleString(),
       }));
