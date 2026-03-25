@@ -3,7 +3,7 @@
 import type { InventoryItem } from "@/app/types/index";
 import { statusMap } from "@/constants";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function InventoryTable({
   inventory,
@@ -15,6 +15,30 @@ export default function InventoryTable({
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+
+  const filteredInventory = useMemo(() => {
+    return inventory.filter((item) => {
+      const normalizedKeyword = keyword.trim().toLowerCase();
+      const matchesKeyword =
+        normalizedKeyword.length === 0 ||
+        [item.brand, item.name, item.style, item.size, String(item.id)]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedKeyword);
+
+      const matchesStatus =
+        statusFilter === "all" || String(item.status ?? 1) === statusFilter;
+
+      const method = item.paymentMethod ?? "cash";
+      const matchesPayment =
+        paymentFilter === "all" || method === paymentFilter;
+
+      return matchesKeyword && matchesStatus && matchesPayment;
+    });
+  }, [inventory, keyword, statusFilter, paymentFilter]);
 
   const handleRecalculate = async () => {
     if (
@@ -113,8 +137,52 @@ export default function InventoryTable({
           )}
         </h2>
         <span className="text-sm text-slate-500 font-medium">
-          共 {inventory.length} 筆紀錄
+          共 {filteredInventory.length} 筆紀錄
         </span>
+      </div>
+
+      <div className="border-b border-slate-100 bg-white px-4 py-4 lg:px-8">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="搜尋 ID / 品牌 / 品名 / 款式 / 尺寸"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
+          >
+            <option value="all">全部狀態</option>
+            {statusMap.map((status) => (
+              <option key={status.value} value={String(status.value)}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={paymentFilter}
+            onChange={(e) => setPaymentFilter(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
+          >
+            <option value="all">全部付款方式</option>
+            <option value="cash">現金</option>
+            <option value="card">信用卡</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => {
+              setKeyword("");
+              setStatusFilter("all");
+              setPaymentFilter("all");
+            }}
+            className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            清除篩選
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -126,6 +194,12 @@ export default function InventoryTable({
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 ID
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+              >
+                付款方式
               </th>
               <th
                 scope="col"
@@ -172,23 +246,26 @@ export default function InventoryTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-slate-100">
-            {inventory.length === 0 ? (
+            {filteredInventory.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={9}
                   className="px-8 py-12 text-center text-slate-400 font-medium"
                 >
-                  尚無進貨紀錄，請先登錄換匯後再進行商品進貨。
+                  目前條件下沒有符合的進貨/庫存資料。
                 </td>
               </tr>
             ) : (
-              inventory.map((item) => (
+              filteredInventory.map((item) => (
                 <tr
                   key={item.id}
                   className="hover:bg-slate-50/80 transition-colors"
                 >
                   <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     #{item.id}
+                  </td>
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                    {item.paymentMethod === "cash" ? "現金" : "信用卡"}
                   </td>
                   <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     <div className="font-medium text-slate-900">
