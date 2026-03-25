@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import ProductForm, { ProductFormRef } from "@/components/ProductForm";
 import PurchaseOrderForm from "@/components/PurchaseOrderForm";
@@ -35,45 +35,45 @@ export default function PurchasesPage() {
 
   const productFormRef = useRef<ProductFormRef>(null);
 
-  const fetchInitialData = async (
-    rangeStart = startDate,
-    rangeEnd = endDate,
-  ) => {
-    setIsLoading(true);
-    try {
-      const purchaseQuery = new URLSearchParams({
-        startDate: rangeStart,
-        endDate: rangeEnd,
-      });
+  const fetchInitialData = useCallback(
+    async (rangeStart = startDate, rangeEnd = endDate) => {
+      setIsLoading(true);
+      try {
+        const purchaseQuery = new URLSearchParams({
+          startDate: rangeStart,
+          endDate: rangeEnd,
+        });
 
-      const [invRes, excRes, poRes] = await Promise.all([
-        fetch("/api/inventory"),
-        fetch("/api/exchanges"),
-        fetch(`/api/purchases?${purchaseQuery.toString()}`),
-      ]);
+        const [invRes, excRes, poRes] = await Promise.all([
+          fetch("/api/inventory"),
+          fetch("/api/exchanges"),
+          fetch(`/api/purchases?${purchaseQuery.toString()}`),
+        ]);
 
-      if (invRes.ok) {
-        const invData = await invRes.json();
-        setInventory(invData);
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          setInventory(invData);
+        }
+        if (excRes.ok) {
+          const excData = await excRes.json();
+          setExchangeRecords(excData);
+        }
+        if (poRes.ok) {
+          const poData = await poRes.json();
+          setPurchaseOrders(poData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      } finally {
+        setIsLoading(false);
       }
-      if (excRes.ok) {
-        const excData = await excRes.json();
-        setExchangeRecords(excData);
-      }
-      if (poRes.ok) {
-        const poData = await poRes.json();
-        setPurchaseOrders(poData);
-      }
-    } catch (error) {
-      console.error("Failed to fetch initial data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [startDate, endDate],
+  );
 
   useEffect(() => {
     fetchInitialData();
-  }, [startDate, endDate]);
+  }, [fetchInitialData]);
 
   const walletStats = useMemo(() => {
     const cashInventory = inventory.filter(
@@ -229,26 +229,28 @@ export default function PurchasesPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mb-4 flex flex-col gap-4 lg:gap-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="mb-2 text-2xl font-bold sm:text-3xl">採購管理</h1>
-          <p className="text-gray-600">管理採購訂單需求、實體進貨入庫</p>
+          <p className="text-gray-600 whitespace-pre">
+            管理採購訂單需求、實體進貨入庫
+          </p>
         </div>
-        <div className="grid min-w-0 grid-cols-2 gap-3">
-          <label className="min-w-0 text-sm text-slate-600">
+        <div className="grid w-full min-w-0 grid-cols-2 gap-3 overflow-hidden sm:grid-cols-2">
+          <label className="w-full min-w-0 overflow-hidden text-sm text-slate-600">
             起始日
             <input
               type="date"
-              className="mt-1 block w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              className="mt-1 block w-full min-w-0 max-w-full appearance-none rounded-lg border border-slate-300 px-2 py-2 text-sm text-slate-700"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </label>
-          <label className="min-w-0 text-sm text-slate-600">
+          <label className="w-full min-w-0 overflow-hidden text-sm text-slate-600">
             結束日
             <input
               type="date"
-              className="mt-1 block w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
+              className="mt-1 block w-full min-w-0 max-w-full appearance-none rounded-lg border border-slate-300 px-2 py-2 text-sm text-slate-700"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
