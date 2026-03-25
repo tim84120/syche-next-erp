@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
   const pathname = usePathname();
@@ -13,6 +13,10 @@ export default function Header() {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  const handleSignOut = () => {
+    void signOut({ callbackUrl: "/" });
+  };
 
   const navItems = [
     {
@@ -68,13 +72,22 @@ export default function Header() {
             ))}
           </nav>
         </div>
-        <div className="hidden text-sm text-slate-500 sm:block">
+        <div className="hidden items-center gap-3 text-sm text-slate-500 sm:flex">
           {session?.user && (
-            <span className="text-slate-400 font-normal mr-2">
-              {session.user.name ?? ""}
-            </span>
+            <>
+              <span className="mr-1 font-normal text-slate-400">
+                {session.user.name ?? ""}
+              </span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                登出
+              </button>
+            </>
           )}
-          v1.2.0
+          <span>v1.2.0</span>
         </div>
         <button
           type="button"
@@ -118,6 +131,15 @@ export default function Header() {
               <div className="mb-1 text-slate-700">
                 {session.user.name ?? ""}
               </div>
+            )}
+            {session?.user && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="mb-2 mt-2 w-full rounded-xl border border-slate-200 px-4 py-2 text-left font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                登出
+              </button>
             )}
             <div>v1.2.0</div>
           </div>

@@ -29,9 +29,11 @@ export default function PurchasesPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] =
     useState<MobileSectionKey>("purchase-order");
-  const today = toDateInputValue(new Date());
-  const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(today);
+  const today = new Date();
+  const defaultStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const [startDate, setStartDate] = useState(toDateInputValue(defaultStart));
+  const [endDate, setEndDate] = useState(toDateInputValue(today));
 
   const productFormRef = useRef<ProductFormRef>(null);
 

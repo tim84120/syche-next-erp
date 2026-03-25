@@ -5,7 +5,6 @@ import { InventoryItem, ExchangeRecord } from "./types/index";
 import WalletCard from "../components/WalletCard";
 import ExchangeForm from "../components/ExchangeForm";
 import ExchangeTable from "../components/ExchangeTable";
-import ProductForm from "../components/ProductForm";
 import InventoryTable from "../components/InventoryTable";
 
 export default function SYCHE_ERP() {
