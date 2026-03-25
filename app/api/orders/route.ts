@@ -58,58 +58,17 @@ export async function POST(request: Request) {
 }
 
 // 3. 批次/單一更新訂單狀態 (PATCH)
+// 注：庫存調整已在訂單項目新增/刪除時處理，此處只做狀態更新
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     const { orderIds, status } = body;
 
-    // 找出這些訂單與其明細
-    const orders = await prisma.order.findMany({
+    // 批次更新訂單狀態
+    await prisma.order.updateMany({
       where: { id: { in: orderIds } },
-      include: { items: true },
+      data: { status },
     });
-
-    for (const order of orders) {
-      await prisma.$transaction(async (tx) => {
-        if (status === "completed" && !order.isDeducted) {
-          // 狀態變更為「已完成」且尚未扣庫存 -> 扣減庫存
-          for (const item of order.items) {
-            if (item.inventoryItemId) {
-              await tx.inventoryItem.update({
-                where: { id: item.inventoryItemId },
-                data: { stockQuantity: { decrement: item.quantity } },
-              });
-            }
-          }
-          // 更新訂單
-          await tx.order.update({
-            where: { id: order.id },
-            data: { status, isDeducted: true },
-          });
-        } else if (status !== "completed" && order.isDeducted) {
-          // 狀態從「已完成」改為其他，且已經扣過庫存 -> 把庫存加回來
-          for (const item of order.items) {
-            if (item.inventoryItemId) {
-              await tx.inventoryItem.update({
-                where: { id: item.inventoryItemId },
-                data: { stockQuantity: { increment: item.quantity } },
-              });
-            }
-          }
-          // 更新訂單
-          await tx.order.update({
-            where: { id: order.id },
-            data: { status, isDeducted: false },
-          });
-        } else {
-          // 沒有庫存變動的純狀態更新
-          await tx.order.update({
-            where: { id: order.id },
-            data: { status },
-          });
-        }
-      });
-    }
 
     return NextResponse.json({ message: "狀態更新成功" });
   } catch (error) {

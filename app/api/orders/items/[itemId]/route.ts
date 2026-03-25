@@ -8,8 +8,29 @@ export async function DELETE(
   try {
     const { itemId } = await params;
 
-    await prisma.orderItem.delete({
-      where: { id: parseInt(itemId) },
+    // Use transaction to ensure both deletion and inventory restoration happen together
+    await prisma.$transaction(async (tx) => {
+      // First, fetch the order item to get its inventory info
+      const orderItem = await tx.orderItem.findUnique({
+        where: { id: parseInt(itemId) },
+      });
+
+      if (!orderItem) {
+        throw new Error("訂單項目不存在");
+      }
+
+      // Delete the order item
+      await tx.orderItem.delete({
+        where: { id: parseInt(itemId) },
+      });
+
+      // Restore inventory if it was linked
+      if (orderItem.inventoryItemId) {
+        await tx.inventoryItem.update({
+          where: { id: orderItem.inventoryItemId },
+          data: { stockQuantity: { increment: orderItem.quantity } },
+        });
+      }
     });
 
     return NextResponse.json({ message: "刪除成功" }, { status: 200 });

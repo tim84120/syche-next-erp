@@ -293,7 +293,8 @@ export default function OrdersPage() {
       });
       if (res.ok) {
         alert("已成功關聯庫存商品！");
-        fetchOrders(); // 重新抓取包含明細的訂單
+        await fetchOrders(); // 重新抓取包含明細的訂單
+        await fetchInventory(); // 更新庫存下拉單
       } else {
         const err = await res.json();
         alert(`關聯失敗：${err.error}`);
@@ -311,7 +312,8 @@ export default function OrdersPage() {
       });
       if (res.ok) {
         alert("已解除關聯！");
-        fetchOrders();
+        await fetchOrders();
+        await fetchInventory(); // 更新庫存下拉單
       } else {
         alert("解除關聯失敗");
       }

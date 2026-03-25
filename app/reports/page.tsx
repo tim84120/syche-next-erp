@@ -380,7 +380,9 @@ export default function FinancialReportsPage() {
               <select
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 bg-white"
                 value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value as PaymentFilter)}
+                onChange={(e) =>
+                  setPaymentFilter(e.target.value as PaymentFilter)
+                }
               >
                 <option value="all">全部</option>
                 <option value="cash">現金</option>
