@@ -54,9 +54,61 @@ export default function InventoryTable({
             <button
               onClick={handleRecalculate}
               disabled={isRecalculating}
-              className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-md font-semibold transition-colors disabled:opacity-50"
+              aria-label={isRecalculating ? "計算中" : "重新整理匯率成本"}
+              title={isRecalculating ? "計算中" : "重新整理匯率成本"}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50"
             >
-              {isRecalculating ? "計算中..." : "重新整理匯率成本"}
+              {isRecalculating ? (
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                    className="stroke-current opacity-25"
+                    strokeWidth="3"
+                  />
+                  <path
+                    d="M21 12a9 9 0 0 0-9-9"
+                    className="stroke-current"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M20 4v6h-6"
+                    className="stroke-current"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M4 20v-6h6"
+                    className="stroke-current"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M20 10a8 8 0 0 0-14-3M4 14a8 8 0 0 0 14 3"
+                    className="stroke-current"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </button>
           )}
         </h2>
@@ -71,49 +123,49 @@ export default function InventoryTable({
             <tr>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 ID
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 品牌 / 品名
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
               >
                 庫存數量
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
               >
                 進貨數量
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 外幣進價
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 鎖定匯率
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 狀態
               </th>
               <th
                 scope="col"
-                className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
                 台幣單件成本
               </th>
@@ -135,32 +187,32 @@ export default function InventoryTable({
                   key={item.id}
                   className="hover:bg-slate-50/80 transition-colors"
                 >
-                  <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     #{item.id}
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-slate-800">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     <div className="font-medium text-slate-900">
                       {item.brand}
                     </div>
                     <div className="text-sm text-slate-500">{item.name}</div>
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm text-center text-slate-600">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm text-center text-slate-600">
                     <span className="bg-slate-100 px-2.5 py-1 rounded-md font-semibold">
                       {item.stockQuantity}
                     </span>
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm text-center text-slate-600">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm text-center text-slate-600">
                     <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">
                       {item.quantity}
                     </span>
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm font-medium text-teal-600">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-teal-600">
                     {item.foreignCost?.toLocaleString()} THB
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
                     {item.appliedRate?.toFixed(4)}
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm text-slate-500">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm text-slate-500">
                     <span
                       className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((status) => status.value === item.status)?.color}`}
                     >
@@ -168,7 +220,7 @@ export default function InventoryTable({
                         ?.label || "已下單"}
                     </span>
                   </td>
-                  <td className="px-8 py-4 whitespace-nowrap text-sm font-bold text-slate-800">
+                  <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-bold text-slate-800">
                     NT$ {item.twdCost?.toLocaleString()}
                   </td>
                 </tr>
