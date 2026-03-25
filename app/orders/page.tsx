@@ -240,7 +240,6 @@ export default function OrdersPage() {
 
   // --- 從後端 API 抓取資料 ---
   const fetchOrders = async () => {
-    setIsLoading(true);
     try {
       const res = await fetch("/api/orders");
       const data = await res.json();
@@ -256,7 +255,6 @@ export default function OrdersPage() {
       setOrders(formattedData);
     } catch (error) {
     } finally {
-      setIsLoading(false);
     }
   };
 

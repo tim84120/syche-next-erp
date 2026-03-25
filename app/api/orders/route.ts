@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         detail: body.detail || null,
         lineName: body.lineName || null,
         email: body.email || null,
-        status: "placed",
+        status: "pending",
       },
       include: { items: true },
     });
@@ -77,7 +77,7 @@ export async function PATCH(request: Request) {
             if (item.inventoryItemId) {
               await tx.inventoryItem.update({
                 where: { id: item.inventoryItemId },
-                data: { quantity: { decrement: item.quantity } },
+                data: { stockQuantity: { decrement: item.quantity } },
               });
             }
           }
@@ -92,7 +92,7 @@ export async function PATCH(request: Request) {
             if (item.inventoryItemId) {
               await tx.inventoryItem.update({
                 where: { id: item.inventoryItemId },
-                data: { quantity: { increment: item.quantity } },
+                data: { stockQuantity: { increment: item.quantity } },
               });
             }
           }

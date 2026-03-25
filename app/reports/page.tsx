@@ -19,7 +19,10 @@ interface InventoryItem {
   twdCost: number;
   quantity: number;
   stockQuantity: number;
+  paymentMethod?: string;
 }
+
+type PaymentFilter = "all" | "cash" | "card";
 
 interface OrderItem {
   id: number;
@@ -57,6 +60,7 @@ interface OrderProfitRow {
   cogs: number;
   profit: number;
   margin: number;
+  matchedItemCount: number;
 }
 
 const salesStatus: OrderStatus = "completed";
@@ -97,6 +101,7 @@ export default function FinancialReportsPage() {
 
   const [startDate, setStartDate] = useState(toDateInputValue(defaultStart));
   const [endDate, setEndDate] = useState(toDateInputValue(today));
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
 
   useEffect(() => {
     let ignore = false;
@@ -141,14 +146,25 @@ export default function FinancialReportsPage() {
   const orderProfitRows = useMemo<OrderProfitRow[]>(() => {
     return orders.map((order) => {
       const date = new Date(order.createdAt);
-      const revenue = order.items.length
-        ? order.items.reduce(
+      const filteredItems =
+        paymentFilter === "all"
+          ? order.items
+          : order.items.filter((item) => {
+              if (!item.inventoryItemId) return false;
+              const inv = inventoryMap.get(item.inventoryItemId);
+              return inv?.paymentMethod === paymentFilter;
+            });
+
+      const revenue = filteredItems.length
+        ? filteredItems.reduce(
             (sum, item) => sum + item.sellPriceTwd * item.quantity,
             0,
           )
-        : order.totalAmount;
+        : paymentFilter === "all"
+          ? order.totalAmount
+          : 0;
 
-      const cogs = order.items.reduce((sum, item) => {
+      const cogs = filteredItems.reduce((sum, item) => {
         if (!item.inventoryItemId) return sum;
         const inv = inventoryMap.get(item.inventoryItemId);
         if (!inv) return sum;
@@ -167,9 +183,10 @@ export default function FinancialReportsPage() {
         cogs,
         profit,
         margin,
+        matchedItemCount: filteredItems.length,
       };
     });
-  }, [orders, inventoryMap]);
+  }, [orders, inventoryMap, paymentFilter]);
 
   const filteredRows = useMemo(() => {
     const start = new Date(`${startDate}T00:00:00`);
@@ -178,9 +195,11 @@ export default function FinancialReportsPage() {
     return orderProfitRows.filter((row) => {
       const inDateRange = row.date >= start && row.date <= end;
       if (!inDateRange) return false;
-      return row.status === salesStatus;
+      if (row.status !== salesStatus) return false;
+      if (paymentFilter !== "all" && row.matchedItemCount === 0) return false;
+      return true;
     });
-  }, [orderProfitRows, startDate, endDate]);
+  }, [orderProfitRows, startDate, endDate, paymentFilter]);
 
   const summary = useMemo(() => {
     const totalRevenue = filteredRows.reduce(
@@ -274,6 +293,12 @@ export default function FinancialReportsPage() {
       if (createdAt < start || createdAt > end) continue;
 
       for (const item of order.items) {
+        if (paymentFilter !== "all") {
+          if (!item.inventoryItemId) continue;
+          const inv = inventoryMap.get(item.inventoryItemId);
+          if (inv?.paymentMethod !== paymentFilter) continue;
+        }
+
         const key = item.inventoryItemId
           ? `id-${item.inventoryItemId}`
           : `${item.brand ?? ""}-${item.name ?? ""}-${item.style ?? ""}-${item.size ?? ""}`;
@@ -313,7 +338,7 @@ export default function FinancialReportsPage() {
       }))
       .sort((a, b) => b.profit - a.profit)
       .slice(0, 12);
-  }, [orders, inventoryMap, startDate, endDate]);
+  }, [orders, inventoryMap, startDate, endDate, paymentFilter]);
 
   return (
     <main className="max-w-6xl mx-auto px-6 mt-8 space-y-8">
@@ -325,7 +350,7 @@ export default function FinancialReportsPage() {
               即時計算成本、營收與毛利，協助你檢查商品與訂單獲利。
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <label className="text-sm text-slate-600">
               起始日
               <input
@@ -350,6 +375,18 @@ export default function FinancialReportsPage() {
                 僅計算已完成訂單
               </div>
             </div>
+            <label className="text-sm text-slate-600">
+              付款方式
+              <select
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 bg-white"
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value as PaymentFilter)}
+              >
+                <option value="all">全部</option>
+                <option value="cash">現金</option>
+                <option value="card">信用卡</option>
+              </select>
+            </label>
           </div>
         </div>
       </section>
