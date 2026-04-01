@@ -162,3 +162,17 @@ model PurchaseOrder {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
+
+// 運費與雜支表
+model Expense {
+  id            Int      @id @default(autoincrement())
+  type          String // 類型 (shipping: 運費, misc: 雜支)
+  title         String // 標題（例如：1月海運費、封箱膠帶）
+  amountThb     Float // 泰銖金額
+  amountTwd     Int // 台幣成本
+  appliedRate   Float // 套用的匯率
+  paymentMethod String   @default("cash") // 扣款方式: cash = 現金, card = 刷卡
+  date          DateTime // 支出日期
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

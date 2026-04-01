@@ -51,6 +51,15 @@ interface ExchangeRecord {
   thbReceived: number;
 }
 
+interface Expense {
+  id: number;
+  type: "shipping" | "misc";
+  title: string;
+  amountTwd: number;
+  paymentMethod: string;
+  date: string;
+}
+
 interface OrderProfitRow {
   id: string;
   date: Date;
@@ -94,13 +103,15 @@ export default function FinancialReportsPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [exchanges, setExchanges] = useState<ExchangeRecord[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
   const today = new Date();
   const defaultStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const defaultEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
   const [startDate, setStartDate] = useState(toDateInputValue(defaultStart));
-  const [endDate, setEndDate] = useState(toDateInputValue(today));
+  const [endDate, setEndDate] = useState(toDateInputValue(defaultEnd));
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>("all");
 
   useEffect(() => {
@@ -109,10 +120,11 @@ export default function FinancialReportsPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [invRes, ordRes, excRes] = await Promise.all([
+        const [invRes, ordRes, excRes, expRes] = await Promise.all([
           fetch("/api/inventory"),
           fetch("/api/orders"),
           fetch("/api/exchanges"),
+          fetch("/api/expenses"),
         ]);
 
         if (!ignore && invRes.ok) {
@@ -123,6 +135,9 @@ export default function FinancialReportsPage() {
         }
         if (!ignore && excRes.ok) {
           setExchanges(await excRes.json());
+        }
+        if (!ignore && expRes.ok) {
+          setExpenses(await expRes.json());
         }
       } catch (error) {
         console.error("Failed to load report data:", error);
@@ -201,12 +216,32 @@ export default function FinancialReportsPage() {
     });
   }, [orderProfitRows, startDate, endDate, paymentFilter]);
 
+  const filteredExpenses = useMemo(() => {
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59`);
+
+    return expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date);
+      const inDateRange = expenseDate >= start && expenseDate <= end;
+      if (!inDateRange) return false;
+      if (paymentFilter !== "all" && expense.paymentMethod !== paymentFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [expenses, startDate, endDate, paymentFilter]);
+
   const summary = useMemo(() => {
     const totalRevenue = filteredRows.reduce(
       (sum, row) => sum + row.revenue,
       0,
     );
-    const totalCogs = filteredRows.reduce((sum, row) => sum + row.cogs, 0);
+    const productCogs = filteredRows.reduce((sum, row) => sum + row.cogs, 0);
+    const expenseCogs = filteredExpenses.reduce(
+      (sum, expense) => sum + expense.amountTwd,
+      0,
+    );
+    const totalCogs = productCogs + expenseCogs;
     const grossProfit = totalRevenue - totalCogs;
     const grossMargin =
       totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
@@ -232,6 +267,8 @@ export default function FinancialReportsPage() {
 
     return {
       totalRevenue,
+      productCogs,
+      expenseCogs,
       totalCogs,
       grossProfit,
       grossMargin,
@@ -240,12 +277,18 @@ export default function FinancialReportsPage() {
       exchangeRate: exchangeThb > 0 ? exchangeTwd / exchangeThb : 0,
       orderCount: filteredRows.length,
     };
-  }, [filteredRows, inventory, exchanges]);
+  }, [filteredRows, filteredExpenses, inventory, exchanges]);
 
   const monthlyReports = useMemo(() => {
     const bucket = new Map<
       string,
-      { revenue: number; cogs: number; profit: number; orders: number }
+      {
+        revenue: number;
+        cogs: number;
+        expenses: number;
+        profit: number;
+        orders: number;
+      }
     >();
 
     for (const row of filteredRows) {
@@ -253,6 +296,7 @@ export default function FinancialReportsPage() {
       const current = bucket.get(key) ?? {
         revenue: 0,
         cogs: 0,
+        expenses: 0,
         profit: 0,
         orders: 0,
       };
@@ -263,14 +307,30 @@ export default function FinancialReportsPage() {
       bucket.set(key, current);
     }
 
+    for (const expense of filteredExpenses) {
+      const expenseDate = new Date(expense.date);
+      const key = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, "0")}`;
+      const current = bucket.get(key) ?? {
+        revenue: 0,
+        cogs: 0,
+        expenses: 0,
+        profit: 0,
+        orders: 0,
+      };
+      current.expenses += expense.amountTwd;
+      current.profit -= expense.amountTwd;
+      bucket.set(key, current);
+    }
+
     return Array.from(bucket.entries())
       .map(([month, data]) => ({
         month,
         ...data,
+        totalCost: data.cogs + data.expenses,
         margin: data.revenue > 0 ? (data.profit / data.revenue) * 100 : 0,
       }))
       .sort((a, b) => (a.month < b.month ? 1 : -1));
-  }, [filteredRows]);
+  }, [filteredRows, filteredExpenses]);
 
   const productReports = useMemo(() => {
     const bucket = new Map<
@@ -401,9 +461,13 @@ export default function FinancialReportsPage() {
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">總成本 (COGS)</p>
+          <p className="text-sm text-slate-500">總成本</p>
           <p className="text-2xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.totalCogs)}
+          </p>
+          <p className="text-sm text-slate-500 mt-1">
+            商品 {formatCurrency(summary.productCogs)} / 支出{" "}
+            {formatCurrency(summary.expenseCogs)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -436,10 +500,11 @@ export default function FinancialReportsPage() {
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">歷史進貨總成本</p>
+          <p className="text-sm text-slate-500">區間運費與雜支</p>
           <p className="text-xl font-bold text-slate-900 mt-2">
-            {formatCurrency(summary.historicalPurchaseCost)}
+            {formatCurrency(summary.expenseCogs)}
           </p>
+          <p className="text-sm text-slate-500 mt-1">已納入本頁毛利計算</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">資料狀態</p>
@@ -447,7 +512,22 @@ export default function FinancialReportsPage() {
             {loading ? "資料載入中..." : "已更新"}
           </p>
           <p className="text-sm text-slate-500 mt-1">
-            資料來源: 訂單 / 庫存 / 換匯
+            資料來源: 訂單 / 庫存 / 換匯 / 支出
+          </p>
+        </article>
+      </section>
+
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">歷史進貨總成本</p>
+          <p className="text-xl font-bold text-slate-900 mt-2">
+            {formatCurrency(summary.historicalPurchaseCost)}
+          </p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">本期支出筆數</p>
+          <p className="text-xl font-bold text-slate-900 mt-2">
+            {filteredExpenses.length} 筆
           </p>
         </article>
       </section>
@@ -460,7 +540,9 @@ export default function FinancialReportsPage() {
               <th className="py-2">月份</th>
               <th className="py-2">訂單數</th>
               <th className="py-2">營收</th>
-              <th className="py-2">成本</th>
+              <th className="py-2">商品成本</th>
+              <th className="py-2">運費/雜支</th>
+              <th className="py-2">總成本</th>
               <th className="py-2">毛利</th>
               <th className="py-2">毛利率</th>
             </tr>
@@ -479,6 +561,12 @@ export default function FinancialReportsPage() {
                 <td className="py-2 text-slate-600">
                   {formatCurrency(row.cogs)}
                 </td>
+                <td className="py-2 text-slate-600">
+                  {formatCurrency(row.expenses)}
+                </td>
+                <td className="py-2 text-slate-600">
+                  {formatCurrency(row.totalCost)}
+                </td>
                 <td
                   className={`py-2 ${row.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
                 >
@@ -491,7 +579,7 @@ export default function FinancialReportsPage() {
             ))}
             {monthlyReports.length === 0 && (
               <tr>
-                <td className="py-4 text-slate-400" colSpan={6}>
+                <td className="py-4 text-slate-400" colSpan={8}>
                   目前區間沒有可分析資料
                 </td>
               </tr>

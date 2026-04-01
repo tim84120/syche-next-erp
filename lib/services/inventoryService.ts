@@ -7,11 +7,22 @@ export async function getInventoryItems() {
 }
 
 export async function recalculateAllInventoryCosts() {
-  // 1. 取得所有現金付款的進貨紀錄 (依建立時間由舊到新)
+  // 1. 取得所有現金付款的進貨紀錄及支出紀錄 (依建立時間由舊到新)
   const items = await prisma.inventoryItem.findMany({
     where: { paymentMethod: "cash" },
-    orderBy: { createdAt: "asc" },
+    select: { id: true, foreignCost: true, quantity: true, createdAt: true },
   });
+
+  const expenses = await prisma.expense.findMany({
+    where: { paymentMethod: "cash" },
+    select: { id: true, amountThb: true, createdAt: true },
+  });
+
+  // 排序：確保依序扣款
+  const allTransactions = [
+    ...items.map((i) => ({ type: "inventory" as const, ...i })),
+    ...expenses.map((e) => ({ type: "expense" as const, ...e })),
+  ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   // 2. 取得所有換匯紀錄 (依 ID/建立時間由舊到新)
   const batches = await prisma.exchangeRecord.findMany({
@@ -30,9 +41,12 @@ export async function recalculateAllInventoryCosts() {
 
   const updates = [];
 
-  for (const item of items) {
-    // 重算歷史成本時要用原始進貨量，不能用目前剩餘庫存量
-    const totalThbNeeded = item.foreignCost * item.quantity;
+  for (const record of allTransactions) {
+    const totalThbNeeded =
+      record.type === "inventory"
+        ? record.foreignCost * record.quantity
+        : record.amountThb;
+
     let remainingToCost = totalThbNeeded;
     let totalCostTwd = 0;
 
@@ -64,27 +78,33 @@ export async function recalculateAllInventoryCosts() {
     }
 
     if (remainingToCost > 0.001) {
-      // 這裡會有問題：如果把匯率改小了，導致資金池不足以支付歷史進貨，就會卡住
-      // 為了不讓系統崩潰，如果 THB 不足，就直接按最近一次的或 1 來算
       totalCostTwd += remainingToCost * 1.0;
     }
 
-    // 更新此 Item 的成本
-    const singleTwdCost =
-      item.quantity > 0 ? Math.round(totalCostTwd / item.quantity) : 0;
-    const singleAppliedRate =
-      item.foreignCost > 0 ? singleTwdCost / item.foreignCost : 1;
+    if (record.type === "inventory") {
+      const singleTwdCost =
+        record.quantity > 0 ? Math.round(totalCostTwd / record.quantity) : 0;
+      const singleAppliedRate =
+        record.foreignCost > 0 ? singleTwdCost / record.foreignCost : 1;
 
-    // 取出並推入更新陣列
-    updates.push(
-      prisma.inventoryItem.update({
-        where: { id: item.id },
-        data: {
-          twdCost: singleTwdCost,
-          appliedRate: singleAppliedRate,
-        },
-      }),
-    );
+      updates.push(
+        prisma.inventoryItem.update({
+          where: { id: record.id },
+          data: { twdCost: singleTwdCost, appliedRate: singleAppliedRate },
+        }),
+      );
+    } else {
+      const amountTwd = Math.round(totalCostTwd);
+      const appliedRate =
+        record.amountThb > 0 ? amountTwd / record.amountThb : 1;
+
+      updates.push(
+        prisma.expense.update({
+          where: { id: record.id },
+          data: { amountTwd, appliedRate },
+        }),
+      );
+    }
   }
 
   // 執行批次更新
@@ -108,12 +128,18 @@ export async function addInventoryItem(
 
   if (paymentMethod === "cash") {
     // --- FIFO 成本計算 ---
-    // 1. 計算所有過去商品已經消耗了多少 THB
-    const pastItems = await prisma.inventoryItem.findMany();
-    const usedThbHistory = pastItems.reduce(
-      (acc, item) => acc + item.foreignCost * item.quantity,
-      0,
-    );
+    // 1. 計算所有過去商品及支出已經消耗了多少 THB
+    const pastItems = await prisma.inventoryItem.findMany({
+      where: { paymentMethod: "cash" },
+    });
+    const pastExpenses = await prisma.expense.findMany({
+      where: { paymentMethod: "cash" },
+    });
+    const usedThbHistory =
+      pastItems.reduce(
+        (acc, item) => acc + item.foreignCost * item.quantity,
+        0,
+      ) + pastExpenses.reduce((acc, e) => acc + e.amountThb, 0);
 
     // 2. 取得所有換匯紀錄（先進先出，依 ID 由小到大排）
     const batches = await prisma.exchangeRecord.findMany({

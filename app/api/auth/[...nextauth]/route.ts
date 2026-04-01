@@ -7,8 +7,8 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma), // 告訴 NextAuth 把資料存進 Prisma
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_EXTERNAL_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_EXTERNAL_CLIENT_SECRET as string,
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
   ],
   session: {

@@ -35,6 +35,11 @@ export default function Header() {
       active: pathname?.startsWith("/orders"),
     },
     {
+      href: "/expenses",
+      label: "運費與雜支",
+      active: pathname?.startsWith("/expenses"),
+    },
+    {
       href: "/reports",
       label: "財務報表",
       active: pathname?.startsWith("/reports"),
