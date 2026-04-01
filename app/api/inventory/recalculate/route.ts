@@ -10,10 +10,13 @@ export async function POST() {
       return NextResponse.json({ error: "尚未授權" }, { status: 403 });
     }
 
-    // 重新計算所有庫存的鎖定匯率 (FIFO)
+    // 重新計算所有現金進貨與支出的鎖定匯率/成本 (FIFO)
     await recalculateAllInventoryCosts();
 
-    return NextResponse.json({ message: "重新計算成功" }, { status: 200 });
+    return NextResponse.json(
+      { message: "重新計算成功，已依時間順序重建商品與支出成本" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("重新計算庫存匯率失敗:", error);
     return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });

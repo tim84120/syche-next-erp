@@ -1,21 +1,34 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { InventoryItem, ExchangeRecord } from "./types/index";
 import WalletCard from "../components/WalletCard";
 import ExchangeForm from "../components/ExchangeForm";
 import ExchangeTable from "../components/ExchangeTable";
 import InventoryTable from "../components/InventoryTable";
 
+interface ExpenseRecord {
+  id: number;
+  amountThb: number;
+  amountTwd: number;
+  paymentMethod: string;
+}
+
 export default function SYCHE_ERP() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   const fetchInitialData = async () => {
     try {
-      const [invRes, excRes] = await Promise.all([
+      const [invRes, excRes, expRes] = await Promise.all([
         fetch("/api/inventory"),
         fetch("/api/exchanges"),
+        fetch("/api/expenses"),
       ]);
 
       if (invRes.ok) {
@@ -25,6 +38,10 @@ export default function SYCHE_ERP() {
       if (excRes.ok) {
         const excData = await excRes.json();
         setExchangeRecords(excData);
+      }
+      if (expRes.ok) {
+        const expData = await expRes.json();
+        setExpenses(expData);
       }
     } catch (error) {
       console.error("Failed to fetch initial data:", error);
@@ -39,6 +56,9 @@ export default function SYCHE_ERP() {
     const cashInventory = inventory.filter(
       (record) => record.paymentMethod === "cash",
     );
+    const cashExpenses = expenses.filter(
+      (record) => record.paymentMethod === "cash",
+    );
     const totalThbIn = exchangeRecords.reduce(
       (sum, record) => sum + record.thbReceived,
       0,
@@ -47,14 +67,16 @@ export default function SYCHE_ERP() {
       (sum, record) => sum + record.twdSpent,
       0,
     );
-    const totalThbOut = cashInventory.reduce(
-      (sum, item) => sum + item.foreignCost * item.quantity,
-      0,
-    );
-    const totalTwdOut = cashInventory.reduce(
-      (sum, item) => sum + item.twdCost * item.quantity,
-      0,
-    );
+    const totalThbOut =
+      cashInventory.reduce(
+        (sum, item) => sum + item.foreignCost * item.stockQuantity,
+        0,
+      ) + cashExpenses.reduce((sum, item) => sum + item.amountThb, 0);
+    const totalTwdOut =
+      cashInventory.reduce(
+        (sum, item) => sum + item.twdCost * item.stockQuantity,
+        0,
+      ) + cashExpenses.reduce((sum, item) => sum + item.amountTwd, 0);
 
     const currentThbBalance = totalThbIn - totalThbOut;
     const currentTwdCostPool = totalTwdSpent - totalTwdOut;
@@ -66,7 +88,37 @@ export default function SYCHE_ERP() {
       avgRate: averageRate,
       exchangeRecords,
     };
-  }, [exchangeRecords, inventory]);
+  }, [exchangeRecords, inventory, expenses]);
+
+  const handleRecalculate = async () => {
+    if (
+      !confirm(
+        "確定要重新計算所有現金進貨、商品支出、運費與雜支的成本嗎？\n系統會依照時間順序重新扣除泰銖資金池。",
+      )
+    ) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    try {
+      const res = await fetch("/api/inventory/recalculate", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "重新計算失敗");
+      }
+
+      await fetchInitialData();
+      alert("重新計算完成，已依時間順序重建商品與支出成本。");
+    } catch (error) {
+      console.error("Failed to recalculate costs:", error);
+      alert(error instanceof Error ? error.message : "重新計算發生錯誤");
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
 
   // 處理新增換匯
   const handleAddExchange = async (twd: number, thb: number, date: string) => {
@@ -132,6 +184,28 @@ export default function SYCHE_ERP() {
     <>
       <main className="max-w-6xl mx-auto px-6 mt-8 space-y-8">
         <WalletCard stats={walletStats} />
+        {isAdmin && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  全站成本重新計算
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  依時間順序重新計算所有現金進貨、商品支出、運費與雜支的台幣成本。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRecalculate}
+                disabled={isRecalculating}
+                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isRecalculating ? "重新計算中..." : "重新計算所有成本"}
+              </button>
+            </div>
+          </section>
+        )}
         <ExchangeForm onAddRecord={handleAddExchange} />
         <ExchangeTable
           records={exchangeRecords}

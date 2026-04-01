@@ -2,7 +2,6 @@
 
 import type { InventoryItem } from "@/app/types/index";
 import { statusMap } from "@/constants";
-import { useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 
 export default function InventoryTable({
@@ -12,9 +11,6 @@ export default function InventoryTable({
   inventory: InventoryItem[];
   onRefresh?: () => void;
 }) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "admin";
-  const [isRecalculating, setIsRecalculating] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -40,102 +36,10 @@ export default function InventoryTable({
     });
   }, [inventory, keyword, statusFilter, paymentFilter]);
 
-  const handleRecalculate = async () => {
-    if (
-      !confirm(
-        "確定要重新計算所有進貨商品的鎖定匯率嗎？\n這將會根據最新的換匯紀錄重新分配所有商品的台幣成本。",
-      )
-    ) {
-      return;
-    }
-
-    setIsRecalculating(true);
-    try {
-      const res = await fetch("/api/inventory/recalculate", {
-        method: "POST",
-      });
-      if (res.ok) {
-        alert("重新計算完成！");
-        if (onRefresh) onRefresh();
-      } else {
-        const data = await res.json();
-        alert(data.error || "重新計算失敗");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("重新計算發生錯誤");
-    } finally {
-      setIsRecalculating(false);
-    }
-  };
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-4">
-          進貨/庫存
-          {isAdmin && (
-            <button
-              onClick={handleRecalculate}
-              disabled={isRecalculating}
-              aria-label={isRecalculating ? "計算中" : "重新整理匯率成本"}
-              title={isRecalculating ? "計算中" : "重新整理匯率成本"}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 disabled:opacity-50"
-            >
-              {isRecalculating ? (
-                <svg
-                  className="h-4 w-4 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                    className="stroke-current opacity-25"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M21 12a9 9 0 0 0-9-9"
-                    className="stroke-current"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M20 4v6h-6"
-                    className="stroke-current"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M4 20v-6h6"
-                    className="stroke-current"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20 10a8 8 0 0 0-14-3M4 14a8 8 0 0 0 14 3"
-                    className="stroke-current"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-          )}
-        </h2>
+        <h2 className="text-lg font-bold text-slate-800">進貨/庫存</h2>
         <span className="text-sm text-slate-500 font-medium">
           共 {filteredInventory.length} 筆紀錄
         </span>

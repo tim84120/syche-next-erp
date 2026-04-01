@@ -10,23 +10,46 @@ export async function recalculateAllInventoryCosts() {
   // 1. 取得所有現金付款的進貨紀錄及支出紀錄 (依建立時間由舊到新)
   const items = await prisma.inventoryItem.findMany({
     where: { paymentMethod: "cash" },
-    select: { id: true, foreignCost: true, quantity: true, createdAt: true },
+    select: {
+      id: true,
+      foreignCost: true,
+      stockQuantity: true,
+      quantity: true,
+      createdAt: true,
+    },
   });
 
   const expenses = await prisma.expense.findMany({
     where: { paymentMethod: "cash" },
-    select: { id: true, amountThb: true, createdAt: true },
+    select: { id: true, amountThb: true, date: true },
   });
 
   // 排序：確保依序扣款
   const allTransactions = [
-    ...items.map((i) => ({ type: "inventory" as const, ...i })),
-    ...expenses.map((e) => ({ type: "expense" as const, ...e })),
-  ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    ...items.map((item) => ({
+      type: "inventory" as const,
+      id: item.id,
+      foreignCost: item.foreignCost,
+      stockQuantity: item.stockQuantity,
+      quantity: item.quantity,
+      eventDate: item.createdAt,
+    })),
+    ...expenses.map((expense) => ({
+      type: "expense" as const,
+      id: expense.id,
+      amountThb: expense.amountThb,
+      eventDate: expense.date,
+    })),
+  ].sort((a, b) => {
+    const timeDiff = a.eventDate.getTime() - b.eventDate.getTime();
+    if (timeDiff !== 0) return timeDiff;
+    if (a.type !== b.type) return a.type === "inventory" ? -1 : 1;
+    return a.id - b.id;
+  });
 
-  // 2. 取得所有換匯紀錄 (依 ID/建立時間由舊到新)
+  // 2. 取得所有換匯紀錄 (依時間由舊到新)
   const batches = await prisma.exchangeRecord.findMany({
-    orderBy: { id: "asc" },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
 
   let currentBatchIndex = 0;
