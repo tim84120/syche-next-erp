@@ -47,7 +47,9 @@ export default function ExpensesPage() {
   // Form State
   const [type, setType] = useState<ExpenseType>("shipping");
   const [title, setTitle] = useState("");
+  const [currency, setCurrency] = useState<"thb" | "twd">("thb");
   const [amountThb, setAmountThb] = useState("");
+  const [directAmountTwd, setDirectAmountTwd] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [cardAmountTwd, setCardAmountTwd] = useState("");
   const [date, setDate] = useState(getTodayLocalDate());
@@ -81,7 +83,8 @@ export default function ExpensesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !amountThb || !date) return;
+    const amountValid = currency === "thb" ? !!amountThb : !!directAmountTwd;
+    if (!title.trim() || !date || !amountValid) return;
 
     setIsSubmitting(true);
     try {
@@ -91,13 +94,14 @@ export default function ExpensesPage() {
         body: JSON.stringify({
           type,
           title: title.trim(),
-          amountThb: Number(amountThb),
+          amountThb: currency === "thb" ? Number(amountThb) : 0,
           paymentMethod,
           date,
           cardAmountTwd:
-            paymentMethod === "card" && cardAmountTwd
+            currency === "thb" && paymentMethod === "card" && cardAmountTwd
               ? Number(cardAmountTwd)
               : 0,
+          directAmountTwd: currency === "twd" ? Number(directAmountTwd) : 0,
         }),
       });
 
@@ -105,6 +109,7 @@ export default function ExpensesPage() {
         alert("新增成功！如果是現金方式，將會自動由資金池依批次扣除。");
         setTitle("");
         setAmountThb("");
+        setDirectAmountTwd("");
         setCardAmountTwd("");
         setDate(getTodayLocalDate());
 
@@ -231,7 +236,7 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              <div>
+              {currency === "thb" && <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   扣款方式
                 </label>
@@ -285,30 +290,89 @@ export default function ExpensesPage() {
                     <span>信用卡</span>
                   </label>
                 </div>
-              </div>
+              </div>}
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  泰銖金額 (THB)
+                  付款幣別
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span className="text-slate-400 font-medium">฿</span>
-                  </div>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="1"
-                    value={amountThb}
-                    onChange={(e) => setAmountThb(e.target.value)}
-                    placeholder="0"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-mono"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <label
+                    className={`cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 font-medium transition-all ${
+                      currency === "thb"
+                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      checked={currency === "thb"}
+                      onChange={() => { setCurrency("thb"); setPaymentMethod("cash"); }}
+                    />
+                    <span>🇹🇭 泰銖 (THB)</span>
+                  </label>
+                  <label
+                    className={`cursor-pointer border rounded-xl p-3 flex items-center justify-center gap-2 font-medium transition-all ${
+                      currency === "twd"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      className="sr-only"
+                      checked={currency === "twd"}
+                      onChange={() => { setCurrency("twd"); setPaymentMethod("card"); }}
+                    />
+                    <span>🇹🇼 台幣 (TWD)</span>
+                  </label>
                 </div>
               </div>
 
-              {paymentMethod === "card" && (
+              {currency === "thb" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    泰銖金額 (THB)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-slate-400 font-medium">฿</span>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={amountThb}
+                      onChange={(e) => setAmountThb(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-mono"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    台幣金額 (TWD)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-slate-400 font-medium">NT$</span>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={directAmountTwd}
+                      onChange={(e) => setDirectAmountTwd(e.target.value)}
+                      placeholder="0"
+                      className="w-full pl-14 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {currency === "thb" && paymentMethod === "card" && (
                 <div className="animate-fade-in">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     台幣刷卡金額 (TWD){" "}

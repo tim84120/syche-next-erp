@@ -13,11 +13,16 @@ export async function addExpense(
   paymentMethod: string = "cash",
   date: Date,
   cardAmountTwd: number = 0, // 信用卡或非現金需手動輸入的台幣金額
+  directAmountTwd: number = 0, // 直接輸入台幣（不需泰銖換算）
 ) {
   let amountTwd = 0;
   let appliedRate = 1;
 
-  if (paymentMethod === "cash") {
+  if (directAmountTwd > 0) {
+    // 直接以台幣計價，不扣除泰銖資金池
+    amountTwd = directAmountTwd;
+    appliedRate = 1;
+  } else if (paymentMethod === "cash") {
     // --- FIFO 成本計算 ---
     const pastItems = await prisma.inventoryItem.findMany({
       where: { paymentMethod: "cash" },
@@ -77,6 +82,7 @@ export async function addExpense(
     amountTwd = cardAmountTwd > 0 ? cardAmountTwd : Math.round(amountThb);
     appliedRate = amountThb > 0 ? amountTwd / amountThb : 1;
   }
+  // 注意：directAmountTwd > 0 的分支已在最上方處理
 
   const newExpense = await prisma.expense.create({
     data: {

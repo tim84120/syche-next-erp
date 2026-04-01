@@ -14,19 +14,28 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type, title, amountThb, paymentMethod, date, cardAmountTwd } = body;
+    const {
+      type,
+      title,
+      amountThb,
+      paymentMethod,
+      date,
+      cardAmountTwd,
+      directAmountTwd,
+    } = body;
 
-    if (!type || !title || !amountThb || !date) {
+    if (!type || !title || (!amountThb && !directAmountTwd) || !date) {
       return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
     }
 
     const expense = await addExpense(
       type,
       title,
-      Number(amountThb),
+      Number(amountThb) || 0,
       paymentMethod || "cash",
       new Date(date),
       cardAmountTwd ? Number(cardAmountTwd) : 0,
+      directAmountTwd ? Number(directAmountTwd) : 0,
     );
 
     return NextResponse.json(expense, { status: 201 });

@@ -20,7 +20,7 @@ export async function recalculateAllInventoryCosts() {
   });
 
   const expenses = await prisma.expense.findMany({
-    where: { paymentMethod: "cash" },
+    where: { paymentMethod: "cash", amountThb: { gt: 0 } },
     select: { id: true, amountThb: true, date: true },
   });
 
