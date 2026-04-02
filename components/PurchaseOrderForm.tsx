@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 export default function PurchaseOrderForm({
   onOrderAdded,
 }: {
   onOrderAdded: () => void;
 }) {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     brand: "",
     name: "",
@@ -39,11 +41,11 @@ export default function PurchaseOrderForm({
         });
         onOrderAdded(); // 重新拉取資料或更新畫面
       } else {
-        alert("新增失敗");
+        alert(t("purchaseOrderForm.addFailed", "新增失敗"));
       }
     } catch (err) {
       console.error(err);
-      alert("發生錯誤");
+      alert(t("common.unexpected", "發生錯誤"));
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +57,9 @@ export default function PurchaseOrderForm({
         <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xl">
           🛒
         </div>
-        <h2 className="text-xl font-bold text-slate-800">建立採購訂單</h2>
+        <h2 className="text-xl font-bold text-slate-800">
+          {t("purchaseOrderForm.title", "建立採購訂單")}
+        </h2>
       </div>
 
       <form
@@ -64,7 +68,7 @@ export default function PurchaseOrderForm({
       >
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            品牌
+            {t("product.brand", "品牌")}
           </label>
           <input
             type="text"
@@ -72,12 +76,15 @@ export default function PurchaseOrderForm({
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.brand}
             onChange={(e) => setForm({ ...form, brand: e.target.value })}
-            placeholder="例如: Uniqlo"
+            placeholder={t(
+              "purchaseOrderForm.brandPlaceholder",
+              "例如: Uniqlo",
+            )}
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            品名
+            {t("product.name", "品名")}
           </label>
           <input
             type="text"
@@ -85,12 +92,15 @@ export default function PurchaseOrderForm({
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="例如: 素色短T"
+            placeholder={t(
+              "purchaseOrderForm.namePlaceholder",
+              "例如: 素色短T",
+            )}
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            款式
+            {t("product.style", "款式")}
           </label>
           <input
             type="text"
@@ -98,12 +108,12 @@ export default function PurchaseOrderForm({
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.style}
             onChange={(e) => setForm({ ...form, style: e.target.value })}
-            placeholder="例如: 黑色"
+            placeholder={t("purchaseOrderForm.stylePlaceholder", "例如: 黑色")}
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            尺寸
+            {t("product.size", "尺寸")}
           </label>
           <input
             type="text"
@@ -111,12 +121,12 @@ export default function PurchaseOrderForm({
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.size}
             onChange={(e) => setForm({ ...form, size: e.target.value })}
-            placeholder="例如: M"
+            placeholder={t("purchaseOrderForm.sizePlaceholder", "例如: M")}
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            數量
+            {t("purchaseOrderForm.qty", "數量")}
           </label>
           <input
             type="number"
@@ -126,12 +136,12 @@ export default function PurchaseOrderForm({
             onChange={(e) =>
               setForm({ ...form, quantity: Number(e.target.value) })
             }
-            placeholder="例如: 1"
+            placeholder={t("purchaseOrderForm.qtyPlaceholder", "例如: 1")}
           />
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            連結
+            {t("purchaseOrderForm.link", "連結")}
           </label>
           <input
             type="url"
@@ -144,14 +154,17 @@ export default function PurchaseOrderForm({
         </div>
         <div className="md:col-span-2 lg:col-span-3">
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            備註 (選填)
+            {t("purchaseOrderForm.note", "備註 (選填)")}
           </label>
           <input
             type="text"
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
             value={form.note}
             onChange={(e) => setForm({ ...form, note: e.target.value })}
-            placeholder="其他事項填寫這裡..."
+            placeholder={t(
+              "purchaseOrderForm.notePlaceholder",
+              "其他事項填寫這裡...",
+            )}
           />
         </div>
 
@@ -161,7 +174,9 @@ export default function PurchaseOrderForm({
             disabled={isSubmitting}
             className="w-full rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 md:w-auto"
           >
-            {isSubmitting ? "建立中..." : "送出採購訂單"}
+            {isSubmitting
+              ? t("purchaseOrderForm.submitting", "建立中...")
+              : t("purchaseOrderForm.submit", "送出採購訂單")}
           </button>
         </div>
       </form>

@@ -10,6 +10,7 @@ import type {
   InventoryItem,
   ExchangeRecord,
 } from "~/types/index";
+import { useI18n } from "@/lib/i18n";
 
 type MobileSectionKey = "purchase-order" | "product-import" | "purchase-list";
 
@@ -21,6 +22,7 @@ const toDateInputValue = (date: Date) => {
 };
 
 export default function PurchasesPage() {
+  const { t } = useI18n();
   const { data: session } = useSession();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [exchangeRecords, setExchangeRecords] = useState<ExchangeRecord[]>([]);
@@ -138,7 +140,10 @@ export default function PurchasesPage() {
           addedItems.push(item);
         } else {
           const err = await res.json();
-          alert(`新增 ${p.name} 失敗: ` + (err.error || ""));
+          alert(
+            `${t("purchases.addFailed", "新增")} ${p.name} ${t("purchases.failed", "失敗")}: ` +
+              (err.error || ""),
+          );
           hasError = true;
           break; // 若其中一筆失敗，就中止後續新增
         }
@@ -165,11 +170,11 @@ export default function PurchasesPage() {
       if (res.ok) {
         await fetchInitialData();
       } else {
-        alert("更新狀態失敗");
+        alert(t("purchases.updateStatusFailed", "更新狀態失敗"));
       }
     } catch (error) {
       console.error("更新狀態失敗:", error);
-      alert("更新狀態失敗");
+      alert(t("purchases.updateStatusFailed", "更新狀態失敗"));
     }
   };
 
@@ -180,18 +185,18 @@ export default function PurchasesPage() {
   }[] = [
     {
       key: "purchase-order",
-      label: "建立採購單",
-      description: "新增採購需求",
+      label: t("purchases.sectionOrder", "建立採購單"),
+      description: t("purchases.sectionOrderDesc", "新增採購需求"),
     },
     {
       key: "product-import",
-      label: "商品進貨",
-      description: "批次入庫與扣款",
+      label: t("purchases.sectionImport", "商品進貨"),
+      description: t("purchases.sectionImportDesc", "批次入庫與扣款"),
     },
     {
       key: "purchase-list",
-      label: "訂單列表",
-      description: "查看與更新狀態",
+      label: t("purchases.sectionList", "訂單列表"),
+      description: t("purchases.sectionListDesc", "查看與更新狀態"),
     },
   ];
 
@@ -226,7 +231,9 @@ export default function PurchasesPage() {
 
   if (!session?.user) {
     return (
-      <div className="p-8 text-center text-gray-500">請先登入以檢視此頁面</div>
+      <div className="p-8 text-center text-gray-500">
+        {t("common.loginRequired", "請先登入以檢視此頁面")}
+      </div>
     );
   }
 
@@ -234,14 +241,16 @@ export default function PurchasesPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-4 flex flex-col gap-4 lg:gap-10 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">採購管理</h1>
+          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">
+            {t("purchases.title", "採購管理")}
+          </h1>
           <p className="text-gray-600 whitespace-pre">
-            管理採購訂單需求、實體進貨入庫
+            {t("purchases.subtitle", "管理採購訂單需求、實體進貨入庫")}
           </p>
         </div>
         <div className="grid w-full min-w-0 grid-cols-2 gap-3 overflow-hidden sm:grid-cols-2">
           <label className="w-full min-w-0 overflow-hidden text-sm text-slate-600">
-            起始日
+            {t("common.startDate", "起始日")}
             <input
               type="date"
               className="mt-1 block w-full min-w-0 max-w-full appearance-none rounded-lg border border-slate-300 px-2 py-2 text-sm text-slate-700"
@@ -250,7 +259,7 @@ export default function PurchasesPage() {
             />
           </label>
           <label className="w-full min-w-0 overflow-hidden text-sm text-slate-600">
-            結束日
+            {t("common.endDate", "結束日")}
             <input
               type="date"
               className="mt-1 block w-full min-w-0 max-w-full appearance-none rounded-lg border border-slate-300 px-2 py-2 text-sm text-slate-700"
@@ -274,7 +283,7 @@ export default function PurchasesPage() {
             </div>
             <button
               type="button"
-              aria-label="切換採購功能"
+              aria-label={t("purchases.switch", "切換採購功能")}
               aria-expanded={mobileMenuOpen}
               onClick={() => setMobileMenuOpen((open) => !open)}
               className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700"

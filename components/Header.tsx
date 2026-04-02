@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useI18n, type Language } from "@/lib/i18n";
 
 export default function Header() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useI18n();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -21,27 +23,27 @@ export default function Header() {
   const navItems = [
     {
       href: "/inventory",
-      label: "庫存管理",
+      label: t("header.inventory", "庫存管理"),
       active: pathname === "/inventory",
     },
     {
       href: "/purchases",
-      label: "採購管理",
+      label: t("header.purchases", "採購管理"),
       active: pathname?.startsWith("/purchases"),
     },
     {
       href: "/orders",
-      label: "訂單管理",
+      label: t("header.orders", "訂單管理"),
       active: pathname?.startsWith("/orders"),
     },
     {
       href: "/expenses",
-      label: "運費與雜支",
+      label: t("header.expenses", "運費與雜支"),
       active: pathname?.startsWith("/expenses"),
     },
     {
       href: "/reports",
-      label: "財務報表",
+      label: t("header.reports", "財務報表"),
       active: pathname?.startsWith("/reports"),
     },
   ];
@@ -58,7 +60,7 @@ export default function Header() {
               🇹🇭 SYCHE{" "}
             </Link>
             <span className="ml-1 hidden text-lg font-normal text-slate-400 sm:ml-2 sm:inline">
-              進銷存系統
+              {t("header.system", "進銷存系統")}
             </span>
           </h1>
           <nav className="hidden md:flex gap-4 ml-4">
@@ -78,6 +80,16 @@ export default function Header() {
           </nav>
         </div>
         <div className="hidden items-center gap-3 text-sm text-slate-500 sm:flex">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
+            aria-label="language"
+          >
+            <option value="zh-TW">{t("lang.zh-TW", "中文")}</option>
+            <option value="en">{t("lang.en", "English")}</option>
+            <option value="th">{t("lang.th", "ไทย")}</option>
+          </select>
           {session?.user && (
             <>
               <span className="mr-1 font-normal text-slate-400">
@@ -88,7 +100,7 @@ export default function Header() {
                 onClick={handleSignOut}
                 className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
               >
-                登出
+                {t("header.signOut", "登出")}
               </button>
             </>
           )}
@@ -96,7 +108,7 @@ export default function Header() {
         </div>
         <button
           type="button"
-          aria-label="開啟選單"
+          aria-label={t("header.openMenu", "開啟選單")}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
           className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 md:hidden"
@@ -132,6 +144,16 @@ export default function Header() {
             ))}
           </nav>
           <div className="mt-3 border-t border-slate-100 px-4 pt-3 text-sm text-slate-500">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="mb-2 w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-600"
+              aria-label="language"
+            >
+              <option value="zh-TW">{t("lang.zh-TW", "中文")}</option>
+              <option value="en">{t("lang.en", "English")}</option>
+              <option value="th">{t("lang.th", "ไทย")}</option>
+            </select>
             {session?.user && (
               <div className="mb-1 text-slate-700">
                 {session.user.name ?? ""}
@@ -143,7 +165,7 @@ export default function Header() {
                 onClick={handleSignOut}
                 className="mb-2 mt-2 w-full rounded-xl border border-slate-200 px-4 py-2 text-left font-medium text-slate-600 transition-colors hover:bg-slate-50"
               >
-                登出
+                {t("header.signOut", "登出")}
               </button>
             )}
             <div>v1.2.0</div>

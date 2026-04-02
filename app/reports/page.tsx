@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 type OrderStatus =
   | "placed"
@@ -74,15 +75,6 @@ interface OrderProfitRow {
 
 const salesStatus: OrderStatus = "completed";
 
-const statusText: Record<OrderStatus, string> = {
-  placed: "已下單",
-  pending: "待處理",
-  paid: "已付款",
-  shipped: "已出貨",
-  completed: "已完成",
-  cancelled: "已取消",
-};
-
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("zh-TW", {
     style: "currency",
@@ -100,6 +92,7 @@ const toDateInputValue = (date: Date) => {
 };
 
 export default function FinancialReportsPage() {
+  const { t } = useI18n();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [exchanges, setExchanges] = useState<ExchangeRecord[]>([]);
@@ -366,7 +359,7 @@ export default function FinancialReportsPage() {
         const productName =
           [item.brand, item.name, item.style, item.size]
             .filter(Boolean)
-            .join(" ") || "未命名商品";
+            .join(" ") || t("reports.unnamed", "未命名商品");
 
         const inv = item.inventoryItemId
           ? inventoryMap.get(item.inventoryItemId)
@@ -405,14 +398,19 @@ export default function FinancialReportsPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">財務報表中心</h1>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {t("reports.title", "財務報表中心")}
+            </h1>
             <p className="text-slate-500 mt-1">
-              即時計算成本、營收與毛利，協助你檢查商品與訂單獲利。
+              {t(
+                "reports.subtitle",
+                "即時計算成本、營收與毛利，協助你檢查商品與訂單獲利。",
+              )}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <label className="text-sm text-slate-600">
-              起始日
+              {t("common.startDate", "起始日")}
               <input
                 type="date"
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
@@ -421,7 +419,7 @@ export default function FinancialReportsPage() {
               />
             </label>
             <label className="text-sm text-slate-600">
-              結束日
+              {t("common.endDate", "結束日")}
               <input
                 type="date"
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700"
@@ -430,13 +428,13 @@ export default function FinancialReportsPage() {
               />
             </label>
             <div className="text-sm text-slate-600">
-              銷售狀態
+              {t("reports.salesStatus", "銷售狀態")}
               <div className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 bg-slate-50">
-                僅計算已完成訂單
+                {t("reports.completedOnly", "僅計算已完成訂單")}
               </div>
             </div>
             <label className="text-sm text-slate-600">
-              付款方式
+              {t("reports.paymentMethod", "付款方式")}
               <select
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-700 bg-white"
                 value={paymentFilter}
@@ -444,9 +442,9 @@ export default function FinancialReportsPage() {
                   setPaymentFilter(e.target.value as PaymentFilter)
                 }
               >
-                <option value="all">全部</option>
-                <option value="cash">現金</option>
-                <option value="card">信用卡</option>
+                <option value="all">{t("common.all", "全部")}</option>
+                <option value="cash">{t("payment.cash", "現金")}</option>
+                <option value="card">{t("payment.card", "信用卡")}</option>
               </select>
             </label>
           </div>
@@ -455,96 +453,122 @@ export default function FinancialReportsPage() {
 
       <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">總營收</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.totalRevenue", "總營收")}
+          </p>
           <p className="text-2xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.totalRevenue)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">總成本</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.totalCost", "總成本")}
+          </p>
           <p className="text-2xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.totalCogs)}
           </p>
           <p className="text-sm text-slate-500 mt-1">
-            商品 {formatCurrency(summary.productCogs)} / 支出{" "}
+            {t("reports.product", "商品")} {formatCurrency(summary.productCogs)}{" "}
+            / {t("reports.expense", "支出")}{" "}
             {formatCurrency(summary.expenseCogs)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">毛利</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.grossProfit", "毛利")}
+          </p>
           <p
             className={`text-2xl font-bold mt-2 ${summary.grossProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
           >
             {formatCurrency(summary.grossProfit)}
           </p>
           <p className="text-sm text-slate-500 mt-1">
-            毛利率 {formatPercent(summary.grossMargin)}
+            {t("reports.margin", "毛利率")} {formatPercent(summary.grossMargin)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">區間訂單數</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.orderCount", "區間訂單數")}
+          </p>
           <p className="text-2xl font-bold text-slate-900 mt-2">
-            {summary.orderCount} 筆
+            {summary.orderCount} {t("common.records", "筆")}
           </p>
           <p className="text-sm text-slate-500 mt-1">
-            平均匯率 {summary.exchangeRate.toFixed(3)} TWD/THB
+            {t("reports.avgRate", "平均匯率")} {summary.exchangeRate.toFixed(3)}{" "}
+            TWD/THB
           </p>
         </article>
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">目前庫存資產</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.inventoryValue", "目前庫存資產")}
+          </p>
           <p className="text-xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.inventoryValue)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">區間運費與雜支</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.expenseRange", "區間運費與雜支")}
+          </p>
           <p className="text-xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.expenseCogs)}
           </p>
-          <p className="text-sm text-slate-500 mt-1">已納入本頁毛利計算</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {t("reports.expenseIncluded", "已納入本頁毛利計算")}
+          </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">資料狀態</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.dataStatus", "資料狀態")}
+          </p>
           <p className="text-xl font-semibold text-slate-900 mt-2">
-            {loading ? "資料載入中..." : "已更新"}
+            {loading
+              ? t("reports.loading", "資料載入中...")
+              : t("reports.updated", "已更新")}
           </p>
           <p className="text-sm text-slate-500 mt-1">
-            資料來源: 訂單 / 庫存 / 換匯 / 支出
+            {t("reports.source", "資料來源: 訂單 / 庫存 / 換匯 / 支出")}
           </p>
         </article>
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">歷史進貨總成本</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.historyCost", "歷史進貨總成本")}
+          </p>
           <p className="text-xl font-bold text-slate-900 mt-2">
             {formatCurrency(summary.historicalPurchaseCost)}
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">本期支出筆數</p>
+          <p className="text-sm text-slate-500">
+            {t("reports.expenseCount", "本期支出筆數")}
+          </p>
           <p className="text-xl font-bold text-slate-900 mt-2">
-            {filteredExpenses.length} 筆
+            {filteredExpenses.length} {t("common.records", "筆")}
           </p>
         </article>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-auto">
-        <h2 className="text-lg font-bold text-slate-900 mb-4">月度毛利報表</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">
+          {t("reports.monthly", "月度毛利報表")}
+        </h2>
         <table className="w-full min-w-160 text-sm">
           <thead>
             <tr className="text-left text-slate-500 border-b border-slate-200">
-              <th className="py-2">月份</th>
-              <th className="py-2">訂單數</th>
-              <th className="py-2">營收</th>
-              <th className="py-2">商品成本</th>
-              <th className="py-2">運費/雜支</th>
-              <th className="py-2">總成本</th>
-              <th className="py-2">毛利</th>
-              <th className="py-2">毛利率</th>
+              <th className="py-2">{t("reports.month", "月份")}</th>
+              <th className="py-2">{t("reports.orderCountShort", "訂單數")}</th>
+              <th className="py-2">{t("reports.totalRevenue", "營收")}</th>
+              <th className="py-2">{t("reports.productCost", "商品成本")}</th>
+              <th className="py-2">{t("reports.expenseCost", "運費/雜支")}</th>
+              <th className="py-2">{t("reports.totalCost", "總成本")}</th>
+              <th className="py-2">{t("reports.grossProfit", "毛利")}</th>
+              <th className="py-2">{t("reports.margin", "毛利率")}</th>
             </tr>
           </thead>
           <tbody>
@@ -580,7 +604,7 @@ export default function FinancialReportsPage() {
             {monthlyReports.length === 0 && (
               <tr>
                 <td className="py-4 text-slate-400" colSpan={8}>
-                  目前區間沒有可分析資料
+                  {t("reports.noData", "目前區間沒有可分析資料")}
                 </td>
               </tr>
             )}
@@ -589,18 +613,20 @@ export default function FinancialReportsPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-auto">
-        <h2 className="text-lg font-bold text-slate-900 mb-4">訂單利潤明細</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">
+          {t("reports.orderProfit", "訂單利潤明細")}
+        </h2>
         <table className="w-full min-w-225 text-sm">
           <thead>
             <tr className="text-left text-slate-500 border-b border-slate-200">
-              <th className="py-2">訂單編號</th>
-              <th className="py-2">日期</th>
-              <th className="py-2">客戶</th>
-              <th className="py-2">狀態</th>
-              <th className="py-2">營收</th>
-              <th className="py-2">成本</th>
-              <th className="py-2">毛利</th>
-              <th className="py-2">毛利率</th>
+              <th className="py-2">{t("reports.orderId", "訂單編號")}</th>
+              <th className="py-2">{t("common.date", "日期")}</th>
+              <th className="py-2">{t("reports.customer", "客戶")}</th>
+              <th className="py-2">{t("reports.status", "狀態")}</th>
+              <th className="py-2">{t("reports.totalRevenue", "營收")}</th>
+              <th className="py-2">{t("reports.totalCost", "成本")}</th>
+              <th className="py-2">{t("reports.grossProfit", "毛利")}</th>
+              <th className="py-2">{t("reports.margin", "毛利率")}</th>
             </tr>
           </thead>
           <tbody>
@@ -615,7 +641,7 @@ export default function FinancialReportsPage() {
                 </td>
                 <td className="py-2 text-slate-600">{row.customerName}</td>
                 <td className="py-2 text-slate-600">
-                  {statusText[row.status]}
+                  {t(`order.status.${row.status}`, row.status)}
                 </td>
                 <td className="py-2 text-slate-600">
                   {formatCurrency(row.revenue)}
@@ -636,7 +662,7 @@ export default function FinancialReportsPage() {
             {filteredRows.length === 0 && (
               <tr>
                 <td className="py-4 text-slate-400" colSpan={8}>
-                  目前條件沒有符合的訂單
+                  {t("reports.noOrders", "目前條件沒有符合的訂單")}
                 </td>
               </tr>
             )}
@@ -645,16 +671,18 @@ export default function FinancialReportsPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-auto">
-        <h2 className="text-lg font-bold text-slate-900 mb-4">商品利潤排行</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">
+          {t("reports.productProfit", "商品利潤排行")}
+        </h2>
         <table className="w-full min-w-190 text-sm">
           <thead>
             <tr className="text-left text-slate-500 border-b border-slate-200">
-              <th className="py-2">商品</th>
-              <th className="py-2">銷售數量</th>
-              <th className="py-2">營收</th>
-              <th className="py-2">成本</th>
-              <th className="py-2">毛利</th>
-              <th className="py-2">毛利率</th>
+              <th className="py-2">{t("reports.product", "商品")}</th>
+              <th className="py-2">{t("reports.soldQty", "銷售數量")}</th>
+              <th className="py-2">{t("reports.totalRevenue", "營收")}</th>
+              <th className="py-2">{t("reports.totalCost", "成本")}</th>
+              <th className="py-2">{t("reports.grossProfit", "毛利")}</th>
+              <th className="py-2">{t("reports.margin", "毛利率")}</th>
             </tr>
           </thead>
           <tbody>
@@ -686,7 +714,7 @@ export default function FinancialReportsPage() {
             {productReports.length === 0 && (
               <tr>
                 <td className="py-4 text-slate-400" colSpan={6}>
-                  目前區間沒有可分析商品
+                  {t("reports.noProducts", "目前區間沒有可分析商品")}
                 </td>
               </tr>
             )}

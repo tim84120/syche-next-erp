@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useI18n } from "@/lib/i18n";
 
 // --- 型別定義 (確保這些都有保留) ---
 export type OrderStatus =
@@ -159,35 +160,6 @@ function mapImportedStatus(value: string): OrderStatus {
   return "placed";
 }
 
-// 狀態對應的 UI 設定
-const statusConfig: Record<OrderStatus, { label: string; colorClass: string }> =
-  {
-    placed: {
-      label: "已下單",
-      colorClass: "bg-purple-100 text-purple-700 border-purple-200",
-    },
-    pending: {
-      label: "待處理",
-      colorClass: "bg-amber-100 text-amber-700 border-amber-200",
-    },
-    paid: {
-      label: "已付款",
-      colorClass: "bg-blue-100 text-blue-700 border-blue-200",
-    },
-    shipped: {
-      label: "已出貨",
-      colorClass: "bg-indigo-100 text-indigo-700 border-indigo-200",
-    },
-    completed: {
-      label: "已完成",
-      colorClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    },
-    cancelled: {
-      label: "已取消",
-      colorClass: "bg-slate-100 text-slate-600 border-slate-200",
-    },
-  };
-
 // import InventoryItem if available, else define simple type
 interface LocalInventoryItem {
   id: number;
@@ -201,6 +173,7 @@ interface LocalInventoryItem {
 }
 
 export default function OrdersPage() {
+  const { t } = useI18n();
   // 1. 初始化變成空陣列，等待從 API 抓資料
   const [orders, setOrders] = useState<Order[]>([]);
   const [inventoryItems, setInventoryItems] = useState<LocalInventoryItem[]>(
@@ -245,7 +218,9 @@ export default function OrdersPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(`API 發生錯誤，狀態碼：${res.status}`);
+        throw new Error(
+          `${t("orders.apiError", "API 發生錯誤，狀態碼")}: ${res.status}`,
+        );
       }
 
       const formattedData = data.map((order: Order) => ({
@@ -292,33 +267,33 @@ export default function OrdersPage() {
         }),
       });
       if (res.ok) {
-        alert("已成功關聯庫存商品！");
+        alert(t("orders.linkSuccess", "已成功關聯庫存商品！"));
         await fetchOrders(); // 重新抓取包含明細的訂單
         await fetchInventory(); // 更新庫存下拉單
       } else {
         const err = await res.json();
-        alert(`關聯失敗：${err.error}`);
+        alert(`${t("orders.linkFailed", "關聯失敗")}：${err.error}`);
       }
     } catch (e) {
-      alert("關聯發生錯誤");
+      alert(t("orders.linkError", "關聯發生錯誤"));
     }
   };
 
   const handleRemoveLinkItem = async (itemId: number) => {
-    if (!confirm("確定要解除關聯此商品嗎？")) return;
+    if (!confirm(t("orders.unlinkConfirm", "確定要解除關聯此商品嗎？"))) return;
     try {
       const res = await fetch(`/api/orders/items/${itemId}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        alert("已解除關聯！");
+        alert(t("orders.unlinkSuccess", "已解除關聯！"));
         await fetchOrders();
         await fetchInventory(); // 更新庫存下拉單
       } else {
-        alert("解除關聯失敗");
+        alert(t("orders.unlinkFailed", "解除關聯失敗"));
       }
     } catch (e) {
-      alert("解除發生錯誤");
+      alert(t("orders.unlinkError", "解除發生錯誤"));
     }
   };
 
@@ -361,7 +336,7 @@ export default function OrdersPage() {
       setSelectedIds([]);
       setBatchTargetStatus("");
     } catch (error) {
-      alert("狀態更新失敗");
+      alert(t("orders.statusUpdateFailed", "狀態更新失敗"));
     }
   };
 
@@ -425,13 +400,13 @@ export default function OrdersPage() {
         });
       }
     } catch (error) {
-      alert("新增訂單發生錯誤");
+      alert(t("orders.createError", "新增訂單發生錯誤"));
     }
   };
 
   const handleBatchImport = async () => {
     if (!importFile) {
-      alert("請先選擇 CSV 檔案");
+      alert(t("orders.selectCsv", "請先選擇 CSV 檔案"));
       return;
     }
 
@@ -442,7 +417,9 @@ export default function OrdersPage() {
       const rows = parseCsvRows(csvText);
 
       if (rows.length < 2) {
-        alert("CSV 內容不足，至少需要標題列與一筆資料");
+        alert(
+          t("orders.csvTooShort", "CSV 內容不足，至少需要標題列與一筆資料"),
+        );
         return;
       }
 
@@ -474,7 +451,7 @@ export default function OrdersPage() {
       }, []);
 
       if (idxName < 0 || idxAmount < 0) {
-        alert("CSV 缺少必要欄位：姓名 或 金額");
+        alert(t("orders.csvMissingColumns", "CSV 缺少必要欄位：姓名 或 金額"));
         return;
       }
 
@@ -514,7 +491,7 @@ export default function OrdersPage() {
         .filter((row) => row.customerName && !Number.isNaN(row.totalAmount));
 
       if (payloadOrders.length === 0) {
-        alert("找不到可匯入資料，請確認 CSV 欄位與內容");
+        alert(t("orders.csvNoData", "找不到可匯入資料，請確認 CSV 欄位與內容"));
         return;
       }
 
@@ -526,7 +503,7 @@ export default function OrdersPage() {
 
       const result = await res.json();
       if (!res.ok) {
-        throw new Error(result?.error || "匯入失敗");
+        throw new Error(result?.error || t("orders.importFailed", "匯入失敗"));
       }
 
       await fetchOrders();
@@ -534,13 +511,43 @@ export default function OrdersPage() {
       setFileInputKey((prev) => prev + 1);
 
       alert(
-        `匯入完成：成功 ${result.createdCount} 筆，失敗 ${result.failedCount} 筆`,
+        `${t("orders.importDone", "匯入完成")}${t("orders.success", "：成功")} ${result.createdCount} ${t("common.records", "筆")}${t("orders.failedCount", "，失敗")} ${result.failedCount} ${t("common.records", "筆")}`,
       );
     } catch (error) {
-      alert("批次匯入失敗，請確認檔案格式");
+      alert(t("orders.batchImportFailed", "批次匯入失敗，請確認檔案格式"));
     } finally {
       setIsImporting(false);
     }
+  };
+
+  const statusConfig: Record<
+    OrderStatus,
+    { label: string; colorClass: string }
+  > = {
+    placed: {
+      label: t("order.status.placed", "已下單"),
+      colorClass: "bg-purple-100 text-purple-700 border-purple-200",
+    },
+    pending: {
+      label: t("order.status.pending", "待處理"),
+      colorClass: "bg-amber-100 text-amber-700 border-amber-200",
+    },
+    paid: {
+      label: t("order.status.paid", "已付款"),
+      colorClass: "bg-blue-100 text-blue-700 border-blue-200",
+    },
+    shipped: {
+      label: t("order.status.shipped", "已出貨"),
+      colorClass: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    },
+    completed: {
+      label: t("order.status.completed", "已完成"),
+      colorClass: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    },
+    cancelled: {
+      label: t("order.status.cancelled", "已取消"),
+      colorClass: "bg-slate-100 text-slate-600 border-slate-200",
+    },
   };
 
   return (
@@ -552,14 +559,17 @@ export default function OrdersPage() {
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xl">
               📝
             </div>
-            <h2 className="text-xl font-bold text-slate-800">建立新訂單</h2>
+            <h2 className="text-xl font-bold text-slate-800">
+              {t("orders.newOrder", "建立新訂單")}
+            </h2>
           </div>
 
           <form onSubmit={handleCreateOrder} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  姓名 <span className="text-red-500">*</span>
+                  {t("orders.customer", "姓名")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -569,12 +579,12 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, customerName: e.target.value })
                   }
-                  placeholder="輸入客戶姓名"
+                  placeholder={t("orders.customerPlaceholder", "輸入客戶姓名")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  店號
+                  {t("orders.storeNumber", "店號")}
                 </label>
                 <input
                   type="text"
@@ -583,12 +593,12 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, storeNumber: e.target.value })
                   }
-                  placeholder="輸入店號"
+                  placeholder={t("orders.storeNumberPlaceholder", "輸入店號")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  店名
+                  {t("orders.storeName", "店名")}
                 </label>
                 <input
                   type="text"
@@ -597,12 +607,12 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, storeName: e.target.value })
                   }
-                  placeholder="輸入店名"
+                  placeholder={t("orders.storeNamePlaceholder", "輸入店名")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  匯款後五碼
+                  {t("orders.transferCode", "匯款後五碼")}
                 </label>
                 <input
                   type="text"
@@ -612,12 +622,13 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, transferCode: e.target.value })
                   }
-                  placeholder="例：12345"
+                  placeholder={t("orders.transferPlaceholder", "例：12345")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  金額 <span className="text-red-500">*</span>
+                  {t("orders.amount", "金額")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -628,12 +639,12 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, totalAmount: e.target.value })
                   }
-                  placeholder="輸入金額"
+                  placeholder={t("orders.amountPlaceholder", "輸入金額")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Line名字
+                  {t("orders.lineName", "Line名字")}
                 </label>
                 <input
                   type="text"
@@ -642,7 +653,10 @@ export default function OrdersPage() {
                   onChange={(e) =>
                     setForm({ ...form, lineName: e.target.value })
                   }
-                  placeholder="輸入 Line 名字"
+                  placeholder={t(
+                    "orders.lineNamePlaceholder",
+                    "輸入 Line 名字",
+                  )}
                 />
               </div>
               <div>
@@ -654,32 +668,32 @@ export default function OrdersPage() {
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="輸入 Email"
+                  placeholder={t("orders.emailPlaceholder", "輸入 Email")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  備註
+                  {t("common.note", "備註")}
                 </label>
                 <input
                   type="text"
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   value={form.note}
                   onChange={(e) => setForm({ ...form, note: e.target.value })}
-                  placeholder="選填備註"
+                  placeholder={t("orders.notePlaceholder", "選填備註")}
                 />
               </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                訂單明細
+                {t("orders.detail", "訂單明細")}
               </label>
               <textarea
                 rows={3}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 value={form.detail}
                 onChange={(e) => setForm({ ...form, detail: e.target.value })}
-                placeholder="輸入訂單商品明細"
+                placeholder={t("orders.detailPlaceholder", "輸入訂單商品明細")}
               />
             </div>
             <div className="flex justify-end">
@@ -687,7 +701,7 @@ export default function OrdersPage() {
                 type="submit"
                 className="bg-blue-600 text-white font-medium px-8 py-2.5 rounded-lg hover:bg-blue-700 transition-all"
               >
-                新增訂單
+                {t("orders.addOrder", "新增訂單")}
               </button>
             </div>
           </form>
@@ -698,12 +712,16 @@ export default function OrdersPage() {
             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl">
               📥
             </div>
-            <h2 className="text-xl font-bold text-slate-800">批次匯入訂單</h2>
+            <h2 className="text-xl font-bold text-slate-800">
+              {t("orders.batchImport", "批次匯入訂單")}
+            </h2>
           </div>
 
           <p className="text-sm text-slate-500 mb-4">
-            支援 Google 表單回覆
-            CSV，會自動對應：時間、姓名、店號、店名、匯款後五碼、金額、備註、訂單明細、Line名字、Email。
+            {t(
+              "orders.importHint",
+              "支援 Google 表單回覆 CSV，會自動對應：時間、姓名、店號、店名、匯款後五碼、金額、備註、訂單明細、Line名字、Email。",
+            )}
           </p>
 
           <div className="flex flex-col md:flex-row md:items-center gap-3">
@@ -720,7 +738,9 @@ export default function OrdersPage() {
               disabled={!importFile || isImporting}
               className="shrink-0 bg-emerald-600 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isImporting ? "匯入中..." : "批次匯入"}
+              {isImporting
+                ? t("orders.importing", "匯入中...")
+                : t("orders.batchImport", "批次匯入")}
             </button>
           </div>
         </div>
@@ -737,7 +757,7 @@ export default function OrdersPage() {
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
-              全部訂單 ({orders.length})
+              {t("orders.allOrders", "全部訂單")} ({orders.length})
             </button>
             {Object.entries(statusConfig).map(([key, config]) => {
               const count = orders.filter((o) => o.status === key).length;
@@ -764,7 +784,8 @@ export default function OrdersPage() {
           {selectedIds.length > 0 && (
             <div className="bg-blue-50 border-b border-blue-100 px-6 py-3 flex items-center justify-between animate-fade-in">
               <span className="text-sm font-bold text-blue-800">
-                已選擇 {selectedIds.length} 筆訂單
+                {t("orders.selected", "已選擇")} {selectedIds.length}{" "}
+                {t("orders.orders", "筆訂單")}
               </span>
               <div className="flex items-center gap-3">
                 <select
@@ -774,7 +795,9 @@ export default function OrdersPage() {
                     setBatchTargetStatus(e.target.value as OrderStatus | "")
                   }
                 >
-                  <option value="">-- 選擇更改狀態 --</option>
+                  <option value="">
+                    -- {t("orders.selectStatus", "選擇更改狀態")} --
+                  </option>
                   {Object.entries(statusConfig).map(([key, config]) => (
                     <option key={key} value={key}>
                       {config.label}
@@ -786,7 +809,7 @@ export default function OrdersPage() {
                   disabled={!batchTargetStatus}
                   className="bg-blue-600 text-white text-sm font-medium px-4 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
                 >
-                  套用變更
+                  {t("orders.apply", "套用變更")}
                 </button>
               </div>
             </div>
@@ -811,25 +834,25 @@ export default function OrdersPage() {
                     />
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    狀態
+                    {t("reports.status", "狀態")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    訂單號 / 時間
+                    {t("orders.orderTime", "訂單號 / 時間")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    訂單明細
+                    {t("orders.detail", "訂單明細")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    姓名 / Line
+                    {t("orders.customerLine", "姓名 / Line")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    店號 / 店名
+                    {t("orders.storeInfo", "店號 / 店名")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    匯款後五碼
+                    {t("orders.transferCode", "匯款後五碼")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    金額
+                    {t("orders.amount", "金額")}
                   </th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Email
@@ -843,7 +866,7 @@ export default function OrdersPage() {
                       colSpan={9}
                       className="px-8 py-16 text-center text-slate-400 font-medium"
                     >
-                      此分類下尚無訂單資料
+                      {t("orders.emptyByFilter", "此分類下尚無訂單資料")}
                     </td>
                   </tr>
                 ) : (
@@ -898,16 +921,16 @@ export default function OrdersPage() {
                       <td className="px-4 py-4 text-sm text-slate-600 max-w-50 relative group">
                         <div
                           className={`${expandedDetails[order.id] ? "whitespace-pre-wrap wrap-break-word" : "truncate"}`}
-                          title="點擊展開/收合明細"
+                          title={t("orders.expandDetail", "點擊展開/收合明細")}
                         >
                           {order.detail || "-"}
                         </div>
                         {order.note && (
                           <div
                             className={`text-xs text-slate-400 mt-0.5 ${expandedDetails[order.id] ? "whitespace-pre-wrap wrap-break-word" : "truncate"}`}
-                            title="點擊展開/收合備註"
+                            title={t("orders.expandNote", "點擊展開/收合備註")}
                           >
-                            備註：{order.note}
+                            {t("common.note", "備註")}：{order.note}
                           </div>
                         )}
                         {/* 提示展開的小圖示，在滑過時顯示 (或根據狀態顯示) */}
@@ -916,7 +939,9 @@ export default function OrdersPage() {
                             className="absolute right-0 top-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-blue-500 text-xs bg-white/80 rounded px-1 border"
                             onClick={() => toggleDetail(order.id)}
                           >
-                            {expandedDetails[order.id] ? "收合" : "展開"}
+                            {expandedDetails[order.id]
+                              ? t("orders.collapse", "收合")
+                              : t("orders.expand", "展開")}
                           </div>
                         )}
 
@@ -927,10 +952,10 @@ export default function OrdersPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <h4 className="font-bold text-xs text-slate-700 mb-2 flex items-center justify-between">
-                              關聯庫存商品
+                              {t("orders.linkedInventory", "關聯庫存商品")}
                               {order.isDeducted && (
                                 <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px]">
-                                  已扣減庫存
+                                  {t("orders.deducted", "已扣減庫存")}
                                 </span>
                               )}
                             </h4>
@@ -963,7 +988,7 @@ export default function OrdersPage() {
                                         }}
                                         className="text-red-500 hover:text-red-700 opacity-60 hover:opacity-100 shrink-0"
                                       >
-                                        移除
+                                        {t("common.delete", "移除")}
                                       </button>
                                     )}
                                   </li>
@@ -971,7 +996,7 @@ export default function OrdersPage() {
                               </ul>
                             ) : (
                               <div className="text-xs text-slate-400 mb-3 italic">
-                                尚無關聯商品
+                                {t("orders.noLinkedItems", "尚無關聯商品")}
                               </div>
                             )}
 
@@ -982,13 +1007,22 @@ export default function OrdersPage() {
                                   id={`select-inv-${order.id}`}
                                   className="w-full text-xs border border-slate-200 rounded p-1.5 bg-white outline-none focus:border-blue-400"
                                 >
-                                  <option value="">-- 選擇庫存商品 --</option>
+                                  <option value="">
+                                    --{" "}
+                                    {t(
+                                      "orders.selectInventory",
+                                      "選擇庫存商品",
+                                    )}{" "}
+                                    --
+                                  </option>
                                   {inventoryItems.map((inv) => {
                                     if (inv.stockQuantity > 0) {
                                       return (
                                         <option key={inv.id} value={inv.id}>
                                           {inv.brand} {inv.name} {inv.style}{" "}
-                                          {inv.size} (餘: {inv.stockQuantity})
+                                          {inv.size} (
+                                          {t("orders.remaining", "餘")}:{" "}
+                                          {inv.stockQuantity})
                                         </option>
                                       );
                                     }
@@ -1002,7 +1036,10 @@ export default function OrdersPage() {
                                     defaultValue={1}
                                     min={1}
                                     className="w-16 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
-                                    placeholder="數量"
+                                    placeholder={t(
+                                      "purchaseOrderForm.qty",
+                                      "數量",
+                                    )}
                                   />
                                   <input
                                     type="number"
@@ -1010,7 +1047,10 @@ export default function OrdersPage() {
                                     defaultValue={0}
                                     min={0}
                                     className="flex-1 text-xs border border-slate-200 rounded p-1.5 outline-none focus:border-blue-400"
-                                    placeholder="銷售金額 (TWD)"
+                                    placeholder={t(
+                                      "orders.sellPrice",
+                                      "銷售金額 (TWD)",
+                                    )}
                                   />
                                   <button
                                     type="button"
@@ -1041,7 +1081,7 @@ export default function OrdersPage() {
                                         );
                                     }}
                                   >
-                                    加入關聯
+                                    {t("orders.addLink", "加入關聯")}
                                   </button>
                                 </div>
                               </div>

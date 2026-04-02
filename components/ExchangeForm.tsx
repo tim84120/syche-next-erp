@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   onAddRecord: (twd: number, thb: number, date: string) => void;
@@ -7,6 +8,7 @@ interface Props {
 const getTodayLocalDate = () => new Date().toLocaleDateString("en-CA");
 
 export default function ExchangeForm({ onAddRecord }: Props) {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     twd: "",
     thb: "",
@@ -28,13 +30,15 @@ export default function ExchangeForm({ onAddRecord }: Props) {
         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 text-xl">
           💱
         </div>
-        <h2 className="text-xl font-bold text-slate-800">登錄換匯紀錄</h2>
+        <h2 className="text-xl font-bold text-slate-800">
+          {t("exchangeForm.title", "登錄換匯紀錄")}
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            換匯日期
+            {t("exchangeForm.date", "換匯日期")}
           </label>
           <input
             type="date"
@@ -46,7 +50,7 @@ export default function ExchangeForm({ onAddRecord }: Props) {
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            支付總台幣 (TWD)
+            {t("exchangeForm.twd", "支付總台幣 (TWD)")}
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
@@ -58,13 +62,13 @@ export default function ExchangeForm({ onAddRecord }: Props) {
               className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none"
               value={form.twd}
               onChange={(e) => setForm({ ...form, twd: e.target.value })}
-              placeholder="例如: 10000"
+              placeholder={t("exchangeForm.twdPlaceholder", "例如: 10000")}
             />
           </div>
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-            換得總泰銖 (THB)
+            {t("exchangeForm.thb", "換得總泰銖 (THB)")}
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">
@@ -76,7 +80,7 @@ export default function ExchangeForm({ onAddRecord }: Props) {
               className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all outline-none"
               value={form.thb}
               onChange={(e) => setForm({ ...form, thb: e.target.value })}
-              placeholder="例如: 11200"
+              placeholder={t("exchangeForm.thbPlaceholder", "例如: 11200")}
             />
           </div>
         </div>
@@ -84,7 +88,7 @@ export default function ExchangeForm({ onAddRecord }: Props) {
           type="submit"
           className="w-full bg-slate-900 text-white font-medium py-3 rounded-lg hover:bg-slate-800 active:scale-[0.98] transition-all mt-2"
         >
-          存入資金池
+          {t("exchangeForm.submit", "存入資金池")}
         </button>
       </form>
     </div>

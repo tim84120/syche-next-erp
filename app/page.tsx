@@ -7,6 +7,7 @@ import WalletCard from "../components/WalletCard";
 import ExchangeForm from "../components/ExchangeForm";
 import ExchangeTable from "../components/ExchangeTable";
 import InventoryTable from "../components/InventoryTable";
+import { useI18n } from "@/lib/i18n";
 
 interface ExpenseRecord {
   id: number;
@@ -16,6 +17,7 @@ interface ExpenseRecord {
 }
 
 export default function SYCHE_ERP() {
+  const { t } = useI18n();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -93,7 +95,10 @@ export default function SYCHE_ERP() {
   const handleRecalculate = async () => {
     if (
       !confirm(
-        "確定要重新計算所有現金進貨、商品支出、運費與雜支的成本嗎？\n系統會依照時間順序重新扣除泰銖資金池。",
+        t(
+          "home.recalculateConfirm",
+          "確定要重新計算所有現金進貨、商品支出、運費與雜支的成本嗎？\n系統會依照時間順序重新扣除泰銖資金池。",
+        ),
       )
     ) {
       return;
@@ -107,14 +112,25 @@ export default function SYCHE_ERP() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "重新計算失敗");
+        throw new Error(
+          data.error || t("home.recalculateFailed", "重新計算失敗"),
+        );
       }
 
       await fetchInitialData();
-      alert("重新計算完成，已依時間順序重建商品與支出成本。");
+      alert(
+        t(
+          "home.recalculateSuccess",
+          "重新計算完成，已依時間順序重建商品與支出成本。",
+        ),
+      );
     } catch (error) {
       console.error("Failed to recalculate costs:", error);
-      alert(error instanceof Error ? error.message : "重新計算發生錯誤");
+      alert(
+        error instanceof Error
+          ? error.message
+          : t("home.recalculateError", "重新計算發生錯誤"),
+      );
     } finally {
       setIsRecalculating(false);
     }
@@ -189,10 +205,13 @@ export default function SYCHE_ERP() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">
-                  全站成本重新計算
+                  {t("home.recalculateTitle", "全站成本重新計算")}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  依時間順序重新計算所有現金進貨、商品支出、運費與雜支的台幣成本。
+                  {t(
+                    "home.recalculateDesc",
+                    "依時間順序重新計算所有現金進貨、商品支出、運費與雜支的台幣成本。",
+                  )}
                 </p>
               </div>
               <button
@@ -201,7 +220,9 @@ export default function SYCHE_ERP() {
                 disabled={isRecalculating}
                 className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isRecalculating ? "重新計算中..." : "重新計算所有成本"}
+                {isRecalculating
+                  ? t("home.recalculating", "重新計算中...")
+                  : t("home.recalculateBtn", "重新計算所有成本")}
               </button>
             </div>
           </section>

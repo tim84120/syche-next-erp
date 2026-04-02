@@ -3,6 +3,7 @@
 import type { InventoryItem } from "@/app/types/index";
 import { statusMap } from "@/constants";
 import { useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 export default function InventoryTable({
   inventory,
@@ -11,6 +12,7 @@ export default function InventoryTable({
   inventory: InventoryItem[];
   onRefresh?: () => void;
 }) {
+  const { t } = useI18n();
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -39,9 +41,12 @@ export default function InventoryTable({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h2 className="text-lg font-bold text-slate-800">進貨/庫存</h2>
+        <h2 className="text-lg font-bold text-slate-800">
+          {t("inventoryTable.title", "進貨/庫存")}
+        </h2>
         <span className="text-sm text-slate-500 font-medium">
-          共 {filteredInventory.length} 筆紀錄
+          {t("inventoryTable.total", "共")} {filteredInventory.length}{" "}
+          {t("inventoryTable.records", "筆紀錄")}
         </span>
       </div>
 
@@ -51,7 +56,10 @@ export default function InventoryTable({
             type="text"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="搜尋 ID / 品牌 / 品名 / 款式 / 尺寸"
+            placeholder={t(
+              "inventoryTable.search",
+              "搜尋 ID / 品牌 / 品名 / 款式 / 尺寸",
+            )}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
           />
           <select
@@ -59,10 +67,12 @@ export default function InventoryTable({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
           >
-            <option value="all">全部狀態</option>
+            <option value="all">
+              {t("inventoryTable.allStatus", "全部狀態")}
+            </option>
             {statusMap.map((status) => (
               <option key={status.value} value={String(status.value)}>
-                {status.label}
+                {t(`status.${status.value}`, status.label)}
               </option>
             ))}
           </select>
@@ -71,9 +81,11 @@ export default function InventoryTable({
             onChange={(e) => setPaymentFilter(e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700"
           >
-            <option value="all">全部付款方式</option>
-            <option value="cash">現金</option>
-            <option value="card">信用卡</option>
+            <option value="all">
+              {t("inventoryTable.allPayments", "全部付款方式")}
+            </option>
+            <option value="cash">{t("payment.cash", "現金")}</option>
+            <option value="card">{t("payment.card", "信用卡")}</option>
           </select>
           <button
             type="button"
@@ -84,7 +96,7 @@ export default function InventoryTable({
             }}
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
           >
-            清除篩選
+            {t("inventoryTable.clear", "清除篩選")}
           </button>
         </div>
       </div>
@@ -103,49 +115,49 @@ export default function InventoryTable({
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                付款方式
+                {t("inventoryTable.payment", "付款方式")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                品牌 / 品名
+                {t("inventoryTable.product", "品牌 / 品名")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
               >
-                庫存數量
+                {t("inventoryTable.stockQty", "庫存數量")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider w-24"
               >
-                進貨數量
+                {t("inventoryTable.purchaseQty", "進貨數量")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                外幣進價
+                {t("inventoryTable.foreignCost", "外幣進價")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                鎖定匯率
+                {t("inventoryTable.appliedRate", "鎖定匯率")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                狀態
+                {t("inventoryTable.status", "狀態")}
               </th>
               <th
                 scope="col"
                 className="px-4 py-2 lg:px-8 lg:py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
               >
-                台幣單件成本
+                {t("inventoryTable.twdCost", "台幣單件成本")}
               </th>
             </tr>
           </thead>
@@ -156,7 +168,10 @@ export default function InventoryTable({
                   colSpan={9}
                   className="px-8 py-12 text-center text-slate-400 font-medium"
                 >
-                  目前條件下沒有符合的進貨/庫存資料。
+                  {t(
+                    "inventoryTable.empty",
+                    "目前條件下沒有符合的進貨/庫存資料。",
+                  )}
                 </td>
               </tr>
             ) : (
@@ -169,7 +184,9 @@ export default function InventoryTable({
                     #{item.id}
                   </td>
                   <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
-                    {item.paymentMethod === "cash" ? "現金" : "信用卡"}
+                    {item.paymentMethod === "cash"
+                      ? t("payment.cash", "現金")
+                      : t("payment.card", "信用卡")}
                   </td>
                   <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-medium text-slate-800">
                     <div className="font-medium text-slate-900">
@@ -197,8 +214,11 @@ export default function InventoryTable({
                     <span
                       className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusMap.find((status) => status.value === item.status)?.color}`}
                     >
-                      {statusMap.find((status) => status.value === item.status)
-                        ?.label || "已下單"}
+                      {t(
+                        `status.${statusMap.find((status) => status.value === item.status)?.value ?? 1}`,
+                        statusMap.find((status) => status.value === item.status)
+                          ?.label || "已下單",
+                      )}
                     </span>
                   </td>
                   <td className="px-4 py-2 lg:px-8 lg:py-4 whitespace-nowrap text-sm font-bold text-slate-800">

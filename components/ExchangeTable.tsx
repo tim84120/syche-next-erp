@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExchangeRecord } from "../app/types/index";
 import { useSession } from "next-auth/react";
+import { useI18n } from "@/lib/i18n";
 
 interface ExchangeTableProps {
   records: ExchangeRecord[];
@@ -19,6 +20,7 @@ export default function ExchangeTable({
   onUpdateRecord,
   onDeleteRecord,
 }: ExchangeTableProps) {
+  const { t } = useI18n();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
@@ -42,20 +44,23 @@ export default function ExchangeTable({
       setEditingId(null);
     } catch (error) {
       console.error("Failed to update record:", error);
-      alert("更新失敗");
+      alert(t("exchangeTable.updateFailed", "更新失敗"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (!confirm("確定要刪除這筆換匯紀錄嗎？")) return;
+    if (
+      !confirm(t("exchangeTable.deleteConfirm", "確定要刪除這筆換匯紀錄嗎？"))
+    )
+      return;
     setIsSubmitting(true);
     try {
       await onDeleteRecord(id);
     } catch (error) {
       console.error("Failed to delete record:", error);
-      alert("刪除失敗");
+      alert(t("exchangeTable.deleteFailed", "刪除失敗"));
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +74,7 @@ export default function ExchangeTable({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <span className="w-1.5 h-6 bg-blue-500 rounded-full inline-block"></span>
-            換匯紀錄明細
+            {t("exchangeTable.title", "換匯紀錄明細")}
           </h2>
         </div>
       </div>
@@ -78,20 +83,20 @@ export default function ExchangeTable({
           <thead>
             <tr className="bg-slate-50">
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                日期
+                {t("exchangeTable.date", "日期")}
               </th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                花費台幣 (TWD)
+                {t("exchangeTable.twd", "花費台幣 (TWD)")}
               </th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                獲得泰銖 (THB)
+                {t("exchangeTable.thb", "獲得泰銖 (THB)")}
               </th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                單次匯率
+                {t("exchangeTable.rate", "單次匯率")}
               </th>
               {isAdmin && (
                 <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  操作
+                  {t("exchangeTable.actions", "操作")}
                 </th>
               )}
             </tr>
@@ -155,14 +160,14 @@ export default function ExchangeTable({
                             disabled={isSubmitting}
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition disabled:opacity-50"
                           >
-                            儲存
+                            {t("common.save", "儲存")}
                           </button>
                           <button
                             onClick={handleCancelClick}
                             disabled={isSubmitting}
                             className="bg-slate-200 text-slate-700 px-3 py-1 rounded hover:bg-slate-300 transition disabled:opacity-50"
                           >
-                            取消
+                            {t("common.cancel", "取消")}
                           </button>
                         </div>
                       ) : (
@@ -171,13 +176,13 @@ export default function ExchangeTable({
                             onClick={() => handleEditClick(record)}
                             className="text-blue-500 hover:text-blue-700 font-medium px-2 py-1"
                           >
-                            編輯
+                            {t("common.edit", "編輯")}
                           </button>
                           <button
                             onClick={() => handleDeleteClick(record.id)}
                             className="text-red-500 hover:text-red-700 font-medium px-2 py-1"
                           >
-                            刪除
+                            {t("common.delete", "刪除")}
                           </button>
                         </div>
                       )}
