@@ -124,6 +124,7 @@ const dictionaries: Record<Language, Dictionary> = {
     "inventoryTable.empty": "目前條件下沒有符合的進貨/庫存資料。",
 
     "purchaseOrderForm.title": "建立採購訂單",
+    "purchaseOrderForm.orderedBy": "下單人",
     "purchaseOrderForm.addFailed": "新增失敗",
     "purchaseOrderForm.brandPlaceholder": "例如: Uniqlo",
     "purchaseOrderForm.namePlaceholder": "例如: 素色短T",
@@ -139,6 +140,7 @@ const dictionaries: Record<Language, Dictionary> = {
 
     "purchaseOrderTable.empty": "目前沒有任何採購訂單",
     "purchaseOrderTable.title": "採購訂單列表",
+    "purchaseOrderTable.allOrderers": "全部下單人",
     "purchaseOrderTable.total": "共",
     "purchaseOrderTable.records": "筆",
     "purchaseOrderTable.importSelected": "匯入勾選項至進貨扣款",
@@ -427,6 +429,7 @@ const dictionaries: Record<Language, Dictionary> = {
     "inventoryTable.empty": "No inventory data for current filters.",
 
     "purchaseOrderForm.title": "Create Purchase Order",
+    "purchaseOrderForm.orderedBy": "Ordered By",
     "purchaseOrderForm.addFailed": "Create failed",
     "purchaseOrderForm.brandPlaceholder": "e.g. Uniqlo",
     "purchaseOrderForm.namePlaceholder": "e.g. Basic Tee",
@@ -442,6 +445,7 @@ const dictionaries: Record<Language, Dictionary> = {
 
     "purchaseOrderTable.empty": "No purchase orders",
     "purchaseOrderTable.title": "Purchase Orders",
+    "purchaseOrderTable.allOrderers": "All Orderers",
     "purchaseOrderTable.total": "Total",
     "purchaseOrderTable.records": "records",
     "purchaseOrderTable.importSelected": "Import selected to product deduction",
@@ -728,6 +732,7 @@ const dictionaries: Record<Language, Dictionary> = {
     "inventoryTable.empty": "ไม่พบข้อมูลตามเงื่อนไข",
 
     "purchaseOrderForm.title": "สร้างใบสั่งซื้อ",
+    "purchaseOrderForm.orderedBy": "ผู้สั่งซื้อ",
     "purchaseOrderForm.addFailed": "สร้างไม่สำเร็จ",
     "purchaseOrderForm.brandPlaceholder": "เช่น Uniqlo",
     "purchaseOrderForm.namePlaceholder": "เช่น เสื้อยืดพื้น",
@@ -743,6 +748,7 @@ const dictionaries: Record<Language, Dictionary> = {
 
     "purchaseOrderTable.empty": "ยังไม่มีใบสั่งซื้อ",
     "purchaseOrderTable.title": "รายการใบสั่งซื้อ",
+    "purchaseOrderTable.allOrderers": "ผู้สั่งซื้อทั้งหมด",
     "purchaseOrderTable.total": "รวม",
     "purchaseOrderTable.records": "รายการ",
     "purchaseOrderTable.importSelected": "นำเข้ารายการที่เลือกไปตัดยอดสินค้า",

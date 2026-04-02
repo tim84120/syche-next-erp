@@ -32,6 +32,7 @@ export interface WalletStats {
 export interface PurchaseOrder {
   id: number;
   orderNumber: string;
+  orderedBy: string;
   brand: string;
   name: string;
   style: string;

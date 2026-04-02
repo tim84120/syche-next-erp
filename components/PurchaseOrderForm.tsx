@@ -8,6 +8,7 @@ export default function PurchaseOrderForm({
 }) {
   const { t } = useI18n();
   const [form, setForm] = useState({
+    orderedBy: "WangNa",
     brand: "",
     name: "",
     style: "",
@@ -31,6 +32,7 @@ export default function PurchaseOrderForm({
 
       if (res.ok) {
         setForm({
+          orderedBy: "WangNa",
           brand: "",
           name: "",
           style: "",
@@ -66,6 +68,21 @@ export default function PurchaseOrderForm({
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
       >
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+            {t("purchaseOrderForm.orderedBy", "下單人")}
+          </label>
+          <select
+            required
+            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            value={form.orderedBy}
+            onChange={(e) => setForm({ ...form, orderedBy: e.target.value })}
+          >
+            <option value="WangNa">WangNa</option>
+            <option value="Shu">Shu</option>
+            <option value="Tim">Tim</option>
+          </select>
+        </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             {t("product.brand", "品牌")}

@@ -14,11 +14,18 @@ export default function PurchaseOrderTable({
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [orderedByFilter, setOrderedByFilter] = useState<
+    "all" | "WangNa" | "Shu" | "Tim"
+  >("all");
+
+  const filteredOrders = purchaseOrders.filter((order) =>
+    orderedByFilter === "all" ? true : order.orderedBy === orderedByFilter,
+  );
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(
-        new Set(purchaseOrders.filter((o) => o.status === 0).map((o) => o.id)),
+        new Set(filteredOrders.filter((o) => o.status === 0).map((o) => o.id)),
       );
     } else {
       setSelectedIds(new Set());
@@ -37,7 +44,7 @@ export default function PurchaseOrderTable({
   };
 
   const handleImport = () => {
-    const selectedOrders = purchaseOrders.filter((o) => selectedIds.has(o.id));
+    const selectedOrders = filteredOrders.filter((o) => selectedIds.has(o.id));
     onImportSelected(selectedOrders);
     setSelectedIds(new Set()); // Reset selection after import
   };
@@ -54,7 +61,7 @@ export default function PurchaseOrderTable({
     );
   }
 
-  const pendingCount = purchaseOrders.filter((o) => o.status === 0).length;
+  const pendingCount = filteredOrders.filter((o) => o.status === 0).length;
   const statusMap = [
     {
       value: 0,
@@ -90,8 +97,25 @@ export default function PurchaseOrderTable({
           {t("purchaseOrderTable.title", "採購訂單列表")}
         </h2>
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <select
+            value={orderedByFilter}
+            onChange={(e) => {
+              setOrderedByFilter(
+                e.target.value as "all" | "WangNa" | "Shu" | "Tim",
+              );
+              setSelectedIds(new Set());
+            }}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700"
+          >
+            <option value="all">
+              {t("purchaseOrderTable.allOrderers", "全部下單人")}
+            </option>
+            <option value="WangNa">WangNa</option>
+            <option value="Shu">Shu</option>
+            <option value="Tim">Tim</option>
+          </select>
           <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-sm font-medium">
-            {t("purchaseOrderTable.total", "共")} {purchaseOrders.length}{" "}
+            {t("purchaseOrderTable.total", "共")} {filteredOrders.length}{" "}
             {t("purchaseOrderTable.records", "筆")}
           </span>
           {selectedIds.size > 0 && (
@@ -127,6 +151,9 @@ export default function PurchaseOrderTable({
                 {t("purchaseOrderTable.orderDate", "單號 / 日期")}
               </th>
               <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
+                {t("purchaseOrderForm.orderedBy", "下單人")}
+              </th>
+              <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
                 {t("purchaseOrderTable.product", "品牌 / 品名")}
               </th>
               <th className="px-3 py-3 text-sm font-semibold text-slate-600 sm:px-6 sm:py-4">
@@ -144,7 +171,7 @@ export default function PurchaseOrderTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {purchaseOrders.map((order) => (
+            {filteredOrders.map((order) => (
               <React.Fragment key={order.id}>
                 <tr
                   onClick={() => toggleExpand(order.id)}
@@ -181,6 +208,9 @@ export default function PurchaseOrderTable({
                     <div className="text-sm text-slate-500">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </div>
+                  </td>
+                  <td className="px-3 py-3 sm:px-6 sm:py-4 text-sm text-slate-700 font-medium">
+                    {order.orderedBy || "-"}
                   </td>
                   <td className="px-3 py-3 sm:px-6 sm:py-4">
                     <div className="font-medium text-slate-900">
@@ -220,7 +250,7 @@ export default function PurchaseOrderTable({
                   order.inventoryItems &&
                   order.inventoryItems.length > 0 && (
                     <tr className="bg-slate-50/50">
-                      <td colSpan={8} className="px-3 py-3 sm:px-6 sm:py-4">
+                      <td colSpan={9} className="px-3 py-3 sm:px-6 sm:py-4">
                         <div className="pl-2 sm:pl-12">
                           <h4 className="text-sm font-semibold text-slate-700 mb-2">
                             {t("purchaseOrderTable.importDetail", "進貨明細")}
@@ -318,7 +348,7 @@ export default function PurchaseOrderTable({
                     order.inventoryItems.length === 0) && (
                     <tr className="bg-slate-50/50">
                       <td
-                        colSpan={8}
+                        colSpan={9}
                         className="px-6 py-4 text-center text-sm text-slate-500"
                       >
                         {t(
