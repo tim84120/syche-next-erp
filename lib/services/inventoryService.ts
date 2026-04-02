@@ -143,6 +143,7 @@ export async function addInventoryItem(
   quantity: number,
   paymentMethod: string = "cash",
   purchaseOrderId?: number,
+  twdCost?: number,
 ) {
   const totalThbNeeded = foreignCost * quantity;
 
@@ -213,6 +214,13 @@ export async function addInventoryItem(
     // 結算單件商品的 TWD 成本與換算匯率
     singleTwdCost = Math.round(totalCostTwd / quantity);
     singleAppliedRate = singleTwdCost / foreignCost;
+  } else {
+    // 刷卡時使用前端輸入的台幣單件成本
+    if (twdCost == null || twdCost <= 0) {
+      throw new Error("CARD_TWD_REQUIRED");
+    }
+    singleTwdCost = Math.round(twdCost);
+    singleAppliedRate = foreignCost > 0 ? singleTwdCost / foreignCost : 1;
   }
 
   const newItem = await prisma.inventoryItem.create({

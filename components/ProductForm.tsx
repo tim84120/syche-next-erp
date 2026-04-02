@@ -8,6 +8,7 @@ export interface ProductItem {
   style: string;
   size: string;
   foreignCost: string;
+  twdCost: string;
   quantity: string;
   purchaseOrderId?: number;
 }
@@ -21,6 +22,7 @@ interface Props {
       style: string;
       size: string;
       foreignCost: number;
+      twdCost?: number;
       quantity: number;
       purchaseOrderId?: number;
       paymentMethod: string;
@@ -37,6 +39,7 @@ export interface ProductFormRef {
       style: string;
       size: string;
       quantity: number;
+      twdCost?: number;
     }[],
   ) => void;
 }
@@ -51,6 +54,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
         style: "",
         size: "",
         foreignCost: "",
+        twdCost: "",
         quantity: "1",
       },
     ]);
@@ -69,6 +73,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           size: p.size,
           name: p.name,
           foreignCost: "", // Leave blank for the user to fill
+          twdCost: "",
           quantity: p.quantity.toString(),
           purchaseOrderId: p.id,
         }));
@@ -88,6 +93,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
           style: "",
           size: "",
           foreignCost: "",
+          twdCost: "",
           quantity: "1",
         },
       ]);
@@ -110,6 +116,10 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (items.some((i) => !i.name || !i.foreignCost)) return;
+      if (paymentMethod === "card" && items.some((i) => !i.twdCost)) {
+        alert("刷卡進貨請填寫每項商品的台幣單件成本");
+        return;
+      }
 
       // 計算總價
       const totalOriginalThb = items.reduce(
@@ -136,6 +146,10 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
         foreignCost: Number(
           (Number(item.foreignCost) * discountRatio).toFixed(2),
         ),
+        twdCost:
+          paymentMethod === "card"
+            ? Number((Number(item.twdCost) * discountRatio).toFixed(2))
+            : undefined,
         quantity: Number(item.quantity),
         purchaseOrderId: item.purchaseOrderId,
         paymentMethod,
@@ -154,6 +168,7 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
             size: "",
             name: "",
             foreignCost: "",
+            twdCost: "",
             quantity: "1",
           },
         ]);
@@ -288,6 +303,22 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
                       }
                     />
                   </div>
+                  {paymentMethod === "card" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                        單件成本 (TWD)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                        value={item.twdCost}
+                        onChange={(e) =>
+                          updateItem(item.id, "twdCost", e.target.value)
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -361,7 +392,10 @@ const ProductForm = forwardRef<ProductFormRef, Props>(
 
           <button
             type="submit"
-            disabled={isSubmitting || walletStats.balance <= 0}
+            disabled={
+              isSubmitting ||
+              (paymentMethod === "cash" && walletStats.balance <= 0)
+            }
             className="w-full bg-amber-500 text-white font-medium py-3 rounded-lg hover:bg-amber-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
             {isSubmitting ? "處理中..." : "確認進貨並扣除餘額"}

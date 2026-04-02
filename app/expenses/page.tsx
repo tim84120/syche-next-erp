@@ -236,61 +236,63 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              {currency === "thb" && <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  扣款方式
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label
-                    className={`cursor-pointer border rounded-xl p-3 flex justify-center gap-2 font-medium transition-all items-center ${paymentMethod === "cash" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
-                  >
-                    <input
-                      type="radio"
-                      className="sr-only"
-                      checked={paymentMethod === "cash"}
-                      onChange={() => setPaymentMethod("cash")}
-                    />
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <span>現金 (THB資金池)</span>
+              {currency === "thb" && (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    扣款方式
                   </label>
-                  <label
-                    className={`cursor-pointer border rounded-xl p-3 flex justify-center gap-2 font-medium transition-all items-center ${paymentMethod === "card" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
-                  >
-                    <input
-                      type="radio"
-                      className="sr-only"
-                      checked={paymentMethod === "card"}
-                      onChange={() => setPaymentMethod("card")}
-                    />
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  <div className="grid grid-cols-2 gap-3">
+                    <label
+                      className={`cursor-pointer border rounded-xl p-3 flex justify-center gap-2 font-medium transition-all items-center ${paymentMethod === "cash" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      <input
+                        type="radio"
+                        className="sr-only"
+                        checked={paymentMethod === "cash"}
+                        onChange={() => setPaymentMethod("cash")}
                       />
-                    </svg>
-                    <span>信用卡</span>
-                  </label>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                      <span>現金 (THB資金池)</span>
+                    </label>
+                    <label
+                      className={`cursor-pointer border rounded-xl p-3 flex justify-center gap-2 font-medium transition-all items-center ${paymentMethod === "card" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                    >
+                      <input
+                        type="radio"
+                        className="sr-only"
+                        checked={paymentMethod === "card"}
+                        onChange={() => setPaymentMethod("card")}
+                      />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                      </svg>
+                      <span>信用卡</span>
+                    </label>
+                  </div>
                 </div>
-              </div>}
+              )}
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -308,7 +310,10 @@ export default function ExpensesPage() {
                       type="radio"
                       className="sr-only"
                       checked={currency === "thb"}
-                      onChange={() => { setCurrency("thb"); setPaymentMethod("cash"); }}
+                      onChange={() => {
+                        setCurrency("thb");
+                        setPaymentMethod("cash");
+                      }}
                     />
                     <span>🇹🇭 泰銖 (THB)</span>
                   </label>
@@ -323,7 +328,10 @@ export default function ExpensesPage() {
                       type="radio"
                       className="sr-only"
                       checked={currency === "twd"}
-                      onChange={() => { setCurrency("twd"); setPaymentMethod("card"); }}
+                      onChange={() => {
+                        setCurrency("twd");
+                        setPaymentMethod("card");
+                      }}
                     />
                     <span>🇹🇼 台幣 (TWD)</span>
                   </label>

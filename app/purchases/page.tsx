@@ -117,6 +117,7 @@ export default function PurchasesPage() {
       style: string;
       size: string;
       foreignCost: number;
+      twdCost?: number;
       quantity: number;
       purchaseOrderId?: number;
       paymentMethod: string;
