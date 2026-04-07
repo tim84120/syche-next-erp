@@ -6,14 +6,22 @@ export default function PurchaseOrderTable({
   purchaseOrders,
   onImportSelected,
   onItemStatusChange,
+  onNoteUpdated,
 }: {
   purchaseOrders: PurchaseOrder[];
   onImportSelected: (orders: PurchaseOrder[]) => void;
   onItemStatusChange?: (itemId: number, newStatus: 1 | 2 | 3 | 4) => void;
+  onNoteUpdated?: () => Promise<void> | void;
 }) {
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
+  const [localNotes, setLocalNotes] = useState<Record<number, string | null>>(
+    {},
+  );
   const [orderedByFilter, setOrderedByFilter] = useState<
     "all" | "WangNa" | "Shu" | "Tim"
   >("all");
@@ -53,6 +61,55 @@ export default function PurchaseOrderTable({
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const getOrderNote = (order: PurchaseOrder) => {
+    return localNotes[order.id] ?? order.note;
+  };
+
+  const startEditNote = (order: PurchaseOrder) => {
+    setEditingNoteId(order.id);
+    setNoteDraft(getOrderNote(order) ?? "");
+  };
+
+  const cancelEditNote = () => {
+    setEditingNoteId(null);
+    setNoteDraft("");
+  };
+
+  const saveNote = async (orderId: number) => {
+    if (savingNoteId !== null) {
+      return;
+    }
+
+    setSavingNoteId(orderId);
+    try {
+      const res = await fetch(`/api/purchases/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: noteDraft }),
+      });
+
+      if (!res.ok) {
+        alert(t("purchaseOrderTable.noteUpdateFailed", "更新備註失敗"));
+        return;
+      }
+
+      const updatedOrder = (await res.json()) as PurchaseOrder;
+      setLocalNotes((prev) => ({
+        ...prev,
+        [orderId]: updatedOrder.note ?? null,
+      }));
+      setEditingNoteId(null);
+      setNoteDraft("");
+
+      await onNoteUpdated?.();
+    } catch (error) {
+      console.error("Failed to update purchase order note:", error);
+      alert(t("purchaseOrderTable.noteUpdateFailed", "更新備註失敗"));
+    } finally {
+      setSavingNoteId(null);
+    }
+  };
+
   if (purchaseOrders.length === 0) {
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
@@ -71,12 +128,12 @@ export default function PurchaseOrderTable({
     {
       value: 1,
       label: t("status.1", "已下單"),
-      color: "bg-amber-100 text-amber-700",
+      color: "bg-green-100 text-green-700",
     },
     {
       value: 2,
       label: t("status.2", "已到貨(TH)"),
-      color: "bg-blue-100 text-blue-700",
+      color: "bg-gray-100 text-gray-700",
     },
     {
       value: 3,
@@ -86,7 +143,7 @@ export default function PurchaseOrderTable({
     {
       value: 4,
       label: t("status.4", "已到貨(TW)"),
-      color: "bg-green-100 text-green-700",
+      color: "bg-red-100 text-red-700",
     },
   ];
 
@@ -242,8 +299,57 @@ export default function PurchaseOrderTable({
                       {t("purchaseOrderTable.viewProduct", "查看此商品")}
                     </a>
                   </td>
-                  <td className="max-w-xs truncate px-3 py-3 text-sm text-slate-600 sm:px-6 sm:py-4">
-                    {order.note || "-"}
+                  <td
+                    className="max-w-xs px-3 py-3 text-sm text-slate-600 sm:px-6 sm:py-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {editingNoteId === order.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={noteDraft}
+                          onChange={(e) => setNoteDraft(e.target.value)}
+                          rows={3}
+                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-700 focus:border-amber-500 focus:outline-none"
+                          placeholder={t(
+                            "purchaseOrderForm.notePlaceholder",
+                            "其他事項填寫這裡...",
+                          )}
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="rounded bg-amber-500 px-2 py-1 text-xs font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => saveNote(order.id)}
+                            disabled={savingNoteId === order.id}
+                          >
+                            {savingNoteId === order.id
+                              ? t("purchaseOrderTable.saving", "儲存中...")
+                              : t("common.save", "儲存")}
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                            onClick={cancelEditNote}
+                            disabled={savingNoteId === order.id}
+                          >
+                            {t("common.cancel", "取消")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="truncate">
+                          {getOrderNote(order) || "-"}
+                        </span>
+                        <button
+                          type="button"
+                          className="shrink-0 rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                          onClick={() => startEditNote(order)}
+                        >
+                          {t("common.edit", "編輯")}
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
                 {expandedId === order.id &&

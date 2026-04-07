@@ -37,7 +37,8 @@ export default function PurchasesPage() {
   const [startDate, setStartDate] = useState(toDateInputValue(defaultStart));
   const [endDate, setEndDate] = useState(toDateInputValue(today));
 
-  const productFormRef = useRef<ProductFormRef>(null);
+  const mobileProductFormRef = useRef<ProductFormRef>(null);
+  const desktopProductFormRef = useRef<ProductFormRef>(null);
 
   const fetchInitialData = useCallback(
     async (rangeStart = startDate, rangeEnd = endDate) => {
@@ -178,6 +179,10 @@ export default function PurchasesPage() {
     }
   };
 
+  const handlePurchaseOrderNoteUpdate = useCallback(async () => {
+    await fetchInitialData();
+  }, [fetchInitialData]);
+
   const mobileSections: {
     key: MobileSectionKey;
     label: string;
@@ -204,13 +209,36 @@ export default function PurchasesPage() {
     mobileSections.find((section) => section.key === activeSection) ??
     mobileSections[0];
 
+  const handleMobileImportSelected = useCallback(
+    (selectedOrders: PurchaseOrder[]) => {
+      mobileProductFormRef.current?.importProducts(selectedOrders);
+      setActiveSection("product-import");
+    },
+    [],
+  );
+
+  const handleDesktopImportSelected = useCallback(
+    (selectedOrders: PurchaseOrder[]) => {
+      desktopProductFormRef.current?.importProducts(selectedOrders);
+    },
+    [],
+  );
+
   const purchaseOrderSection = (
     <PurchaseOrderForm onOrderAdded={fetchInitialData} />
   );
 
   const productImportSection = (
     <ProductForm
-      ref={productFormRef}
+      ref={mobileProductFormRef}
+      walletStats={walletStats}
+      onAddProducts={handleAddProducts}
+    />
+  );
+
+  const desktopProductImportSection = (
+    <ProductForm
+      ref={desktopProductFormRef}
       walletStats={walletStats}
       onAddProducts={handleAddProducts}
     />
@@ -219,13 +247,18 @@ export default function PurchasesPage() {
   const purchaseListSection = (
     <PurchaseOrderTable
       purchaseOrders={purchaseOrders}
-      onImportSelected={(selectedOrders) => {
-        if (productFormRef.current) {
-          productFormRef.current.importProducts(selectedOrders);
-          setActiveSection("product-import");
-        }
-      }}
+      onImportSelected={handleMobileImportSelected}
       onItemStatusChange={handleItemStatusChange}
+      onNoteUpdated={handlePurchaseOrderNoteUpdate}
+    />
+  );
+
+  const desktopPurchaseListSection = (
+    <PurchaseOrderTable
+      purchaseOrders={purchaseOrders}
+      onImportSelected={handleDesktopImportSelected}
+      onItemStatusChange={handleItemStatusChange}
+      onNoteUpdated={handlePurchaseOrderNoteUpdate}
     />
   );
 
@@ -346,8 +379,8 @@ export default function PurchasesPage() {
 
       <div className="hidden grid-cols-1 gap-8 md:grid">
         {purchaseOrderSection}
-        {productImportSection}
-        {purchaseListSection}
+        {desktopProductImportSection}
+        {desktopPurchaseListSection}
       </div>
     </div>
   );

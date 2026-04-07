@@ -49,3 +49,10 @@ export async function createPurchaseOrder(request: Request) {
   });
   return newOrder;
 }
+
+export async function updatePurchaseOrderNote(id: number, note: string | null) {
+  return await prisma.purchaseOrder.update({
+    where: { id },
+    data: { note },
+  });
+}
